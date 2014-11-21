@@ -10,7 +10,7 @@ Heads Up! WakaTime depends on [Python](http://www.python.org/getit/) being insta
 
 1. Download the plugin from http://plugins.netbeans.org/plugin/56647/?show=true
 
-2. Inside your IDE, select `Tools` -> `Plugins` -> `Downloaded` -> `Add Plugins...`.
+2. Inside your IDE, select `Tools` -> `Plugins` -> `Downloaded` -> `Add Plugins...`
 
 3. Select the downloaded nbm file.
 
