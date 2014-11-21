@@ -8,7 +8,7 @@ Installation
 
 Heads Up! WakaTime depends on [Python](http://www.python.org/getit/) being installed to work correctly.
 
-1. Download the plugin from http://plugins.netbeans.org/plugin/56647/?show=true
+1. Download the plugin from http://plugins.netbeans.org/plugin/56647
 
 2. Inside your IDE, select `Tools` -> `Plugins` -> `Downloaded` -> `Add Plugins...`
 
