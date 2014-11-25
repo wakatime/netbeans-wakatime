@@ -23,23 +23,23 @@ public class SaveListener implements OnSaveTask {
     private SaveListener(Document document) {
         this.document = document;
     }
-    
+
     @Override
     public void performTask() {
         final FileObject file = this.getFile();
-        final Project currentProject = this.getProject();
-        final long currentTime = System.currentTimeMillis() / 1000;
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                if (file != null) {
+        if (file != null) {
+            final Project currentProject = this.getProject();
+            final long currentTime = System.currentTimeMillis() / 1000;
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
                     final String currentFile = file.getPath();
                     WakaTime.logFile(currentFile, currentProject, true);
                     WakaTime.lastFile = currentFile;
                     WakaTime.lastTime = currentTime;
                 }
-            }
-        });
+            });
+        }
     }
 
     @Override
@@ -51,7 +51,7 @@ public class SaveListener implements OnSaveTask {
     public boolean cancel() {
         return true;
     }
-    
+
     private FileObject getFile() {
         if (this.document == null)
             return null;
@@ -63,7 +63,7 @@ public class SaveListener implements OnSaveTask {
             return null;
         return fileObject;
     }
-    
+
     private Project getProject() {
         if (this.document == null)
             return null;
@@ -75,7 +75,7 @@ public class SaveListener implements OnSaveTask {
             return null;
         return FileOwnerQuery.getOwner(fileObject);
     }
-    
+
     @MimeRegistration(mimeType = "", service = OnSaveTask.Factory.class, position = 1500)
     public static final class FactoryImpl implements Factory {
 
@@ -84,5 +84,5 @@ public class SaveListener implements OnSaveTask {
             return new SaveListener(context.getDocument());
         }
     }
-    
+
 }

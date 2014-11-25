@@ -23,7 +23,7 @@ import org.openide.filesystems.FileObject;
  */
 public class CustomDocumentListener implements DocumentListener {
     private final Document document;
-    
+
     public CustomDocumentListener(Document d) {
         this.document = d;
     }
@@ -42,25 +42,25 @@ public class CustomDocumentListener implements DocumentListener {
     public void changedUpdate(DocumentEvent e) {
         this.handleTyping();
     }
-    
+
     public void update() {
         if (WakaTime.documentListener != null)
             WakaTime.documentListener.remove();
         WakaTime.documentListener = this;
     }
-    
+
     public void remove() {
         this.document.removeDocumentListener(this);
     }
-    
+
     public void handleTyping() {
         final FileObject file = this.getFile();
-        final Project currentProject = this.getProject();
-        final long currentTime = System.currentTimeMillis() / 1000;
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                if (file != null) {
+        if (file != null) {
+            final Project currentProject = this.getProject();
+            final long currentTime = System.currentTimeMillis() / 1000;
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
                     final String currentFile = file.getPath();
                     if ((!currentFile.equals(WakaTime.lastFile) || WakaTime.enoughTimePassed(currentTime))) {
                         WakaTime.logFile(currentFile, currentProject, false);
@@ -68,19 +68,31 @@ public class CustomDocumentListener implements DocumentListener {
                         WakaTime.lastTime = currentTime;
                     }
                 }
-            }
-        });
+            });
+        }
     }
     private FileObject getFile() {
+        if (this.document == null)
+            return null;
         Source source = Source.create(this.document);
+        if (source == null)
+            return null;
         FileObject fileObject = source.getFileObject();
+        if (fileObject == null)
+            return null;
         return fileObject;
     }
-    
+
     private Project getProject() {
+        if (this.document == null)
+            return null;
         Source source = Source.create(document);
+        if (source == null)
+            return null;
         FileObject fileObject = source.getFileObject();
+        if (fileObject == null)
+            return null;
         return FileOwnerQuery.getOwner(fileObject);
     }
-    
+
 }
