@@ -28,12 +28,14 @@ import org.netbeans.api.autoupdate.UpdateManager;
 import org.netbeans.api.autoupdate.UpdateUnit;
 import org.netbeans.api.editor.EditorRegistry;
 import org.netbeans.api.project.Project;
-import org.openide.DialogDisplayer;
-import org.openide.NotifyDescriptor;
+import org.openide.*;
+import org.openide.modules.ModuleInstall;
+import org.openide.util.RequestProcessor;
 import org.openide.windows.OnShowing;
+import org.openide.windows.WindowManager;
 
 @OnShowing
-public class WakaTime implements Runnable {
+public class WakaTime extends ModuleInstall implements Runnable {
     public static final String CODENAME = "org.wakatime.netbeans.plugin";
     public static final String IDE_NAME = "NetBeans";
     public static final String CONFIG = ".wakatime.cfg";
@@ -101,20 +103,23 @@ public class WakaTime implements Runnable {
             EditorRegistry.addPropertyChangeListener(l);
             
             WakaTime.info("Finished initializing WakaTime plugin.");
-            
-            // Check for updates
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    UpdateHandler.checkAndHandleUpdates();
-                }
-            });
-            
         } else {
             WakaTime.error("WakaTime requires Python to be installed.");
             String msg = "WakaTime requires Python to be installed and in your system PATH.\nYou can install Python from https://www.python.org/downloads/\nAfter installing Python, restart your IDE.";
             WakaTime.errorDialog(msg);
         }
+    }
+    
+    @Override
+    public void restored() {
+        // schedule refresh providers
+        // install update checker when UI is ready (main window shown)
+        WindowManager.getDefault().invokeWhenUIReady(new Runnable () {
+            @Override
+            public void run () {
+              UpdateHandler.checkAndHandleUpdates();
+            }
+        });
     }
     
     public static boolean enoughTimePassed(long currentTime) {

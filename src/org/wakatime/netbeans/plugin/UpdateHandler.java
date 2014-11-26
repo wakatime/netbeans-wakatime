@@ -87,6 +87,9 @@ public final class UpdateHandler {
     }
 
     public static void checkAndHandleUpdates() {
+        
+        WakaTime.info("Checking for updates...");
+        
         // refresh silent update center first
         refreshSilentUpdateProvider();
 
@@ -97,9 +100,11 @@ public final class UpdateHandler {
         }
         if (updates.isEmpty() && available.isEmpty()) {
             // none for install
-            WakaTime.info("None for install");
+            WakaTime.info("Plugin is up to date.");
             return;
         }
+        
+        WakaTime.info("Found new plugin version, updating...");
 
         // create a container for install
         OperationContainer<InstallSupport> containerForInstall = feedContainer(available, false);
@@ -118,7 +123,7 @@ public final class UpdateHandler {
         if (containerForUpdate != null) {
             try {
                 handleInstall(containerForUpdate);
-                WakaTime.info("Update done.");
+                WakaTime.info("Plugin update finished.");
             } catch (UpdateHandlerException ex) {
                 WakaTime.error(ex.toString());
                 return ;
