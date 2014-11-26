@@ -1,4 +1,4 @@
-<module_updates timestamp="17/00/25/11/2014">
+<module_updates timestamp="25/11/2014">
     <module codenamebase="org.wakatime.netbeans.plugin" distribution="https://github.com/wakatime/netbeans-wakatime/releases/download/2.0.0/netbeans-wakatime-v2.0.0.nbm" homepage="https://github.com/wakatime/netbeans-wakatime" moduleauthor="WakaTime" needsrestart="false" releasedate="2014/11/25">
         <manifest AutoUpdate-Show-In-Client="true" OpenIDE-Module="org.wakatime.netbeans.plugin" OpenIDE-Module-Implementation-Version="201411251700" OpenIDE-Module-Name="WakaTime" OpenIDE-Module-Specification-Version="2.0.0" />
     </module>
