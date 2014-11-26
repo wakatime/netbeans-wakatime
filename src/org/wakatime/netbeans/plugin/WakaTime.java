@@ -189,10 +189,6 @@ public class WakaTime extends ModuleInstall implements Runnable {
         return "Unknown";
     }
     
-    public static String getProjectName() {
-        return null;
-    }
-    
     public static void logFile(String file, Project currentProject, boolean isWrite) {
         ArrayList<String> cmds = new ArrayList<String>();
         cmds.add(Dependencies.getPythonLocation());
@@ -201,10 +197,9 @@ public class WakaTime extends ModuleInstall implements Runnable {
         cmds.add(ApiKey.getApiKey());
         cmds.add("--file");
         cmds.add(file);
-        String project = WakaTime.getProjectName();
-        if (project != null) {
+        if (currentProject != null) {
             cmds.add("--project");
-            cmds.add(project);
+            cmds.add(currentProject.toString());
         }
         cmds.add("--plugin");
         cmds.add(IDE_NAME+"/"+IDE_VERSION+" "+IDE_NAME.toLowerCase()+"-wakatime/"+WakaTime.VERSION);
