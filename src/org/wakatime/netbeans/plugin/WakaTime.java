@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.SwingUtilities;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import org.netbeans.api.autoupdate.UpdateElement;
@@ -30,7 +29,6 @@ import org.netbeans.api.editor.EditorRegistry;
 import org.netbeans.api.project.Project;
 import org.openide.*;
 import org.openide.modules.ModuleInstall;
-import org.openide.util.RequestProcessor;
 import org.openide.windows.OnShowing;
 import org.openide.windows.WindowManager;
 
