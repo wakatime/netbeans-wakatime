@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import org.netbeans.api.autoupdate.UpdateElement;
@@ -100,6 +101,15 @@ public class WakaTime implements Runnable {
             EditorRegistry.addPropertyChangeListener(l);
             
             WakaTime.info("Finished initializing WakaTime plugin.");
+            
+            // Check for updates
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    UpdateHandler.checkAndHandleUpdates();
+                }
+            });
+            
         } else {
             WakaTime.error("WakaTime requires Python to be installed.");
             String msg = "WakaTime requires Python to be installed and in your system PATH.\nYou can install Python from https://www.python.org/downloads/\nAfter installing Python, restart your IDE.";

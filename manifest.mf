@@ -1,6 +1,8 @@
 Manifest-Version: 1.0
 AutoUpdate-Show-In-Client: true
 OpenIDE-Module: org.wakatime.netbeans.plugin
+OpenIDE-Module-Install: org/wakatime/netbeans/plugins/Activator.class
+OpenIDE-Module-Layer: org/wakatime/netbeans/plugins/layer.xml
+OpenIDE-Module-Implementation-Version: 20141125
 OpenIDE-Module-Localizing-Bundle: org/wakatime/netbeans/plugin/Bundle.properties
 OpenIDE-Module-Specification-Version: 1.0.1
-
