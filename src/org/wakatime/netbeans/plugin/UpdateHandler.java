@@ -62,6 +62,7 @@ import org.netbeans.api.autoupdate.UpdateUnitProvider;
 import org.netbeans.api.autoupdate.UpdateUnitProviderFactory;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
+import org.openide.util.Cancellable;
 import org.openide.util.NbBundle;
 
 /**
@@ -111,10 +112,10 @@ public final class UpdateHandler {
         if (containerForInstall != null) {
             try {
                 handleInstall(containerForInstall);
-                WakaTime.info("Install new modules done.");
+                WakaTime.info("Plugin installation finished.");
             } catch (UpdateHandlerException ex) {
                 WakaTime.error(ex.toString());
-                return ;
+                return;
             }
         }
 
@@ -126,7 +127,7 @@ public final class UpdateHandler {
                 WakaTime.info("Plugin update finished.");
             } catch (UpdateHandlerException ex) {
                 WakaTime.error(ex.toString());
-                return ;
+                return;
             }
         }
 
@@ -156,7 +157,7 @@ public final class UpdateHandler {
         // check licenses
         if (!allLicensesApproved(container)) {
             // have a problem => cannot continue
-            throw new UpdateHandlerException("Cannot continue because license approval is missing for some updates.");
+            throw new UpdateHandlerException("Cannot continue because license approval is missing.");
         }
 
         // download
@@ -197,7 +198,6 @@ public final class UpdateHandler {
 
         // restart later
         support.doRestartLater(r);
-        return;
     }
 
     static Collection<UpdateElement> findNewModules() {
@@ -222,7 +222,19 @@ public final class UpdateHandler {
             return ;
         }
         try {
-            silentUpdateProvider.refresh(ProgressHandleFactory.createHandle("dummy-refresh-handle"), true);
+            final String displayName = "Checking for updates to WakaTime plugin...";
+            silentUpdateProvider.refresh(
+                ProgressHandleFactory.createHandle(
+                    displayName,
+                    new Cancellable () {
+                        @Override
+                        public boolean cancel () {
+                            return true;
+                        }
+                    }
+                ),
+                true
+            );
         } catch (IOException ex) {
             // caught a exception
             WakaTime.error("A problem caught while refreshing Update Centers, cause: " + ex.toString());
@@ -234,7 +246,19 @@ public final class UpdateHandler {
         for (UpdateUnitProvider p : providers) {
             if(CODE_NAME.equals(p.getName())) {
                 try {
-                    p.refresh(ProgressHandleFactory.createHandle("dummy-refresh-handle"), true);
+                    final String displayName = "Checking for updates to WakaTime plugin...";
+                    p.refresh(
+                        ProgressHandleFactory.createHandle(
+                            displayName,
+                            new Cancellable () {
+                                @Override
+                                public boolean cancel () {
+                                    return true;
+                                }
+                            }
+                        ),
+                        true
+                    );
                 } catch (IOException ex) {
                     // caught a exception
                     WakaTime.error("A problem caught while refreshing Update Centers, cause: " + ex.toString());
@@ -290,21 +314,45 @@ public final class UpdateHandler {
     }
 
     static Validator doDownload(InstallSupport support) throws OperationException {
-        ProgressHandle downloadHandle = ProgressHandleFactory.createHandle("dummy-download-handle"); // NOI18N
+        final String displayName = "Downloading new version of WakaTime plugin...";
+        ProgressHandle downloadHandle = ProgressHandleFactory.createHandle(
+            displayName,
+            new Cancellable () {
+                @Override
+                public boolean cancel () {
+                    return true;
+                }
+            }
+        );
         return support.doDownload(downloadHandle, true);
     }
 
     static Installer doVerify(InstallSupport support, Validator validator) throws OperationException {
-        ProgressHandle validateHandle = ProgressHandleFactory.createHandle("dummy-validate-handle");
-        Installer installer = support.doValidate(validator, validateHandle); // validates all plugins are correctly downloaded
-        // XXX: use there methods to make sure updates are signed and trusted
-        // installSupport.isSigned(installer, <an update element>);
-        // installSupport.isTrusted(installer, <an update element>);
+        final String displayName = "Validating WakaTime plugin...";
+        ProgressHandle validateHandle = ProgressHandleFactory.createHandle(
+            displayName,
+            new Cancellable () {
+                @Override
+                public boolean cancel () {
+                    return true;
+                }
+            }
+        );
+        Installer installer = support.doValidate(validator, validateHandle);
         return installer;
     }
 
     static Restarter doInstall(InstallSupport support, Installer installer) throws OperationException {
-        ProgressHandle installHandle = ProgressHandleFactory.createHandle("dummy-install-handle");
+        final String displayName = "Installing WakaTime plugin...";
+        ProgressHandle installHandle = ProgressHandleFactory.createHandle(
+            displayName,
+            new Cancellable () {
+                @Override
+                public boolean cancel () {
+                    return true;
+                }
+            }
+        );
         return support.doInstall(installer, installHandle);
     }
 
