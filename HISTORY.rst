@@ -3,6 +3,13 @@ History
 -------
 
 
+2.0.2 (2014-12-03)
+++++++++++++++++++
+
+- improve messages in autoupdate progress handlers
+- upgrade external wakatime package to v2.1.7
+
+
 2.0.1 (2014-11-25)
 ++++++++++++++++++
 
