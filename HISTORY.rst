@@ -3,6 +3,12 @@ History
 -------
 
 
+2.0.4 (2014-12-07)
+++++++++++++++++++
+
+- use NetBeans project as current project if available
+
+
 2.0.3 (2014-12-05)
 ++++++++++++++++++
 
