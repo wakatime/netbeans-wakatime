@@ -27,6 +27,7 @@ import org.netbeans.api.autoupdate.UpdateManager;
 import org.netbeans.api.autoupdate.UpdateUnit;
 import org.netbeans.api.editor.EditorRegistry;
 import org.netbeans.api.project.Project;
+import org.netbeans.api.project.ProjectUtils;
 import org.openide.*;
 import org.openide.modules.ModuleInstall;
 import org.openide.windows.OnShowing;
@@ -197,7 +198,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
         cmds.add(file);
         if (currentProject != null) {
             cmds.add("--project");
-            cmds.add(currentProject.toString());
+            cmds.add(ProjectUtils.getInformation(currentProject).getDisplayName());
         }
         cmds.add("--plugin");
         cmds.add(IDE_NAME+"/"+IDE_VERSION+" "+IDE_NAME.toLowerCase()+"-wakatime/"+WakaTime.VERSION);
