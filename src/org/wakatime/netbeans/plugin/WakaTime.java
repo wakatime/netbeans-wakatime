@@ -40,7 +40,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
     public static final String CONFIG = ".wakatime.cfg";
     public static final short FREQUENCY = 2; // minutes between pings
     public static final Logger log = Logger.getLogger("WakaTime");
-    
+
     public static String VERSION = "Unknown";
     public static String IDE_VERSION = "Unknown";
     public static String lastFile = null;
@@ -53,7 +53,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
         WakaTime.VERSION = WakaTime.getPluginVersion();
         WakaTime.IDE_VERSION = System.getProperty("netbeans.buildnumber");
         WakaTime.log.log(Level.INFO, "Initializing WakaTime plugin v{0} (https://wakatime.com/)", WakaTime.VERSION);
-        
+
         if (!Dependencies.isCLIInstalled()) {
             WakaTime.info("Downloading and installing wakatime-cli ...");
             Dependencies.installCLI();
@@ -65,7 +65,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
         } else {
             WakaTime.info("wakatime-cli is up to date.");
         }
-        
+
         if (Dependencies.isPythonInstalled()) {
 
             WakaTime.DEBUG = WakaTime.isDebugEnabled();
@@ -84,7 +84,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
                     ApiKey.setApiKey(apiKey);
             }
             WakaTime.debug("Api Key: "+ApiKey.getApiKey());
-            
+
             // Listen for changes to documents
             PropertyChangeListener l = new PropertyChangeListener() {
                 @Override
@@ -100,18 +100,14 @@ public class WakaTime extends ModuleInstall implements Runnable {
             };
 
             EditorRegistry.addPropertyChangeListener(l);
-            
+
             WakaTime.info("Finished initializing WakaTime plugin.");
         } else {
             WakaTime.error("WakaTime requires Python to be installed.");
             String msg = "WakaTime requires Python to be installed and in your system PATH.\nYou can install Python from https://www.python.org/downloads/\nAfter installing Python, restart your IDE.";
             WakaTime.errorDialog(msg);
         }
-    }
-    
-    @Override
-    public void restored() {
-        // schedule refresh providers
+
         // install update checker when UI is ready (main window shown)
         WindowManager.getDefault().invokeWhenUIReady(new Runnable () {
             @Override
@@ -120,33 +116,33 @@ public class WakaTime extends ModuleInstall implements Runnable {
             }
         });
     }
-    
+
     public static boolean enoughTimePassed(long currentTime) {
         return WakaTime.lastTime + FREQUENCY * 60 < currentTime;
     }
-    
+
     public static void info(String msg) {
         log.log(Level.INFO, msg);
     }
-    
+
     public static void warn(String msg) {
         log.log(Level.WARNING, msg);
     }
-    
+
     public static void error(String msg) {
         log.log(Level.SEVERE, msg);
     }
-    
+
     public static void errorDialog(String msg) {
         int msgType = NotifyDescriptor.ERROR_MESSAGE;
         NotifyDescriptor d = new NotifyDescriptor.Message(msg, msgType);
         DialogDisplayer.getDefault().notify(d);
     }
-    
+
     public static void debug(String msg) {
         log.log(Level.CONFIG, msg);
     }
-    
+
     public static Boolean isDebugEnabled() {
         Boolean debug = false;
         File userHome = new File(System.getProperty("user.home"));
@@ -177,7 +173,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
         }
         return debug;
     }
-    
+
     public static String getPluginVersion() {
         for (UpdateUnit updateUnit : UpdateManager.getDefault().getUpdateUnits()) {
             UpdateElement updateElement = updateUnit.getInstalled();
@@ -187,7 +183,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
         }
         return "Unknown";
     }
-    
+
     public static void logFile(String file, Project currentProject, boolean isWrite) {
         ArrayList<String> cmds = new ArrayList<String>();
         cmds.add(Dependencies.getPythonLocation());
