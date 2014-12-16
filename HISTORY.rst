@@ -3,6 +3,19 @@ History
 -------
 
 
+2.0.6 (2014-12-16)
+++++++++++++++++++
+
+- dedicated tab in options menu for WakaTime settings
+- upgrade external wakatime package to v2.1.10
+
+
+2.0.5 (2014-12-08)
+++++++++++++++++++
+
+- only check for updates when plugin first loaded
+
+
 2.0.4 (2014-12-07)
 ++++++++++++++++++
 
