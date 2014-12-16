@@ -78,12 +78,13 @@ public class WakaTime extends ModuleInstall implements Runnable {
             WakaTime.debug("CLI location: " + Dependencies.getCLILocation());
 
             // prompt for apiKey if it does not already exist
-            if (ApiKey.getApiKey().equals("")) {
-                String apiKey = ApiKey.promptForApiKey();
-                if (apiKey != null)
-                    ApiKey.setApiKey(apiKey);
+            String apiKey = ApiKey.getApiKey();
+            if (apiKey.equals("")) {
+                apiKey = ApiKey.promptForApiKey();
+                if (apiKey != null && !apiKey.equals(""))
+                    ApiKey.saveApiKey(apiKey);
             }
-            WakaTime.debug("Api Key: "+ApiKey.getApiKey());
+            WakaTime.debug("API Key: "+ApiKey.getApiKey());
 
             // Listen for changes to documents
             PropertyChangeListener l = new PropertyChangeListener() {

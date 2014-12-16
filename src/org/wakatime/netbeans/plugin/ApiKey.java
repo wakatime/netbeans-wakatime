@@ -8,8 +8,6 @@ Website:     https://wakatime.com/
 
 package org.wakatime.netbeans.plugin;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -19,29 +17,19 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.UUID;
 import org.openide.*;
-import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionRegistration;
-import org.openide.util.NbBundle.Messages;
+import org.openide.util.NbPreferences;
 
-@ActionID(
-        category = "File",
-        id = "org.wakatime.netbeans.plugin.ApiKey"
-)
-@ActionRegistration(
-        displayName = "#CTL_ApiKey"
-)
-@ActionReference(path = "Menu/File", position = 2550, separatorBefore = 2525, separatorAfter = 2575)
-@Messages("CTL_ApiKey=WakaTime API Key")
-public final class ApiKey implements ActionListener {
-    
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        WakaTime.debug("Prompting for api key...");
-        ApiKey.promptForApiKey();
-    }
+public final class ApiKey {
     
     public static String getApiKey() {
+        String apiKey = NbPreferences.forModule(WakaTime.class).get("API Key", "");
+        if (apiKey.equals("")) {
+            apiKey = getApiKeyFromConfigFile();
+        }
+        return apiKey;
+    }
+    
+    public static String getApiKeyFromConfigFile() {
         String apiKey = "";
         File userHome = new File(System.getProperty("user.home"));
         File configFile = new File(userHome, WakaTime.CONFIG);
@@ -74,7 +62,12 @@ public final class ApiKey implements ActionListener {
         return apiKey;
     }
     
-    public static void setApiKey(String apiKey) {
+    public static void saveApiKey(String apiKey) {
+        NbPreferences.forModule(WakaTime.class).put("API Key", apiKey);
+        saveApiKeyToConfigFile(apiKey);
+    }
+    
+    public static void saveApiKeyToConfigFile(String apiKey) {
         File userHome = new File(System.getProperty("user.home"));
         File configFile = new File(userHome, WakaTime.CONFIG);
         BufferedReader br = null;
@@ -132,7 +125,7 @@ public final class ApiKey implements ActionListener {
     }
     
     public static String promptForApiKey() {
-        String apiKey = ApiKey.getApiKey();
+        String apiKey = getApiKey();
         NotifyDescriptor.InputLine question = new NotifyDescriptor.InputLine(
             "API Key:",
             "Enter your WakaTime API Key",
