@@ -6,6 +6,8 @@ Automatic time tracking and analytics about your programming for NetBeans IDE.
 Installation
 ------------
 
+Installation Walkthrough: [http://youtu.be/yjCGYetGv9A](http://youtu.be/yjCGYetGv9A)
+
 Heads Up! WakaTime depends on [Python](http://www.python.org/getit/) being installed to work correctly.
 
 1. Download the plugin from http://plugins.netbeans.org/plugin/56647
