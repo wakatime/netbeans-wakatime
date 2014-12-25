@@ -21,7 +21,7 @@ public class Dependencies {
 
     private static String pythonLocation = null;
     private static String resourcesLocation = null;
-    private static final String cliVersion = "3.0.1";
+    private static final String cliVersion = "3.0.3";
 
     public static boolean isPythonInstalled() {
         return Dependencies.getPythonLocation() != null;
