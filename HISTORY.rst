@@ -3,6 +3,13 @@ History
 -------
 
 
+3.0.1 (2014-12-25)
+++++++++++++++++++
+
+- upgrade external wakatime package to v3.0.3
+- detect JavaScript frameworks from script tags in Html template files
+
+
 3.0.0 (2014-12-23)
 ++++++++++++++++++
 
