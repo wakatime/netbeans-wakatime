@@ -3,6 +3,17 @@ History
 -------
 
 
+3.0.2 (2015-03-06)
+++++++++++++++++++
+
+- upgrade external wakatime-cli package to v4.0.1
+- use requests library instead of urllib2, so api SSL cert is verified
+- new proxy config file item for https proxy support
+- upgrade requests library to v2.5.3 to fix SSL problem on CentOS
+- new options for excluding and including directories
+- new --notfile argument to support logging time without a real file
+
+
 3.0.1 (2014-12-25)
 ++++++++++++++++++
 
