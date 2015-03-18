@@ -1,5 +1,5 @@
-<module_updates timestamp="2015/03/10/02/12/00">
-    <module releasedate="2015/03/10" distribution="https://github.com/wakatime/netbeans-wakatime/releases/download/3.0.3/netbeans-wakatime-v3.0.3.nbm" homepage="https://github.com/wakatime/netbeans-wakatime" moduleauthor="WakaTime" needsrestart="false" codenamebase="org.wakatime.netbeans.plugin">
-        <manifest OpenIDE-Module-Specification-Version="3.0.3" OpenIDE-Module-Implementation-Version="201503100212" AutoUpdate-Show-In-Client="true" OpenIDE-Module="org.wakatime.netbeans.plugin" OpenIDE-Module-Name="WakaTime" OpenIDE-Module-Display-Category="Fun Stuff" />
+<module_updates timestamp="2015/03/18/12/08/00">
+    <module releasedate="2015/03/18" distribution="https://github.com/wakatime/netbeans-wakatime/releases/download/3.0.4/netbeans-wakatime-v3.0.4.nbm" homepage="https://github.com/wakatime/netbeans-wakatime" moduleauthor="WakaTime" needsrestart="false" codenamebase="org.wakatime.netbeans.plugin">
+        <manifest OpenIDE-Module-Specification-Version="3.0.4" OpenIDE-Module-Implementation-Version="201503181208" AutoUpdate-Show-In-Client="true" OpenIDE-Module="org.wakatime.netbeans.plugin" OpenIDE-Module-Name="WakaTime" OpenIDE-Module-Display-Category="Fun Stuff" />
     </module>
 </module_updates>
