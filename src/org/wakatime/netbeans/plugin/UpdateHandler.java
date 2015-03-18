@@ -115,6 +115,15 @@ public final class UpdateHandler {
                 WakaTime.info("Plugin installation finished.");
             } catch (UpdateHandlerException ex) {
                 WakaTime.error(ex.toString());
+                
+                // cancel progress bar
+                InstallSupport support = containerForInstall.getSupport();
+                try {
+                    support.doCancel();
+                } catch (OperationException ex1) {
+                    WakaTime.error(ex1.toString());
+                }
+                
                 return;
             }
         }
@@ -127,6 +136,15 @@ public final class UpdateHandler {
                 WakaTime.info("Plugin update finished.");
             } catch (UpdateHandlerException ex) {
                 WakaTime.error(ex.toString());
+                
+                // cancel progress bar
+                InstallSupport support = containerForUpdate.getSupport();
+                try {
+                    support.doCancel();
+                } catch (OperationException ex1) {
+                    WakaTime.error(ex1.toString());
+                }
+                
                 return;
             }
         }
