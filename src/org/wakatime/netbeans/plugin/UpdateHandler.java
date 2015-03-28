@@ -88,9 +88,9 @@ public final class UpdateHandler {
     }
 
     public static void checkAndHandleUpdates() {
-        
+
         WakaTime.info("Checking for updates...");
-        
+
         // refresh silent update center first
         refreshSilentUpdateProvider();
 
@@ -104,7 +104,7 @@ public final class UpdateHandler {
             WakaTime.info("Plugin is up to date.");
             return;
         }
-        
+
         WakaTime.info("Found new plugin version, updating...");
 
         // create a container for install
@@ -115,7 +115,7 @@ public final class UpdateHandler {
                 WakaTime.info("Plugin installation finished.");
             } catch (UpdateHandlerException ex) {
                 WakaTime.error(ex.toString());
-                
+
                 // cancel progress bar
                 InstallSupport support = containerForInstall.getSupport();
                 try {
@@ -123,7 +123,7 @@ public final class UpdateHandler {
                 } catch (OperationException ex1) {
                     WakaTime.error(ex1.toString());
                 }
-                
+
                 return;
             }
         }
@@ -136,7 +136,7 @@ public final class UpdateHandler {
                 WakaTime.info("Plugin update finished.");
             } catch (UpdateHandlerException ex) {
                 WakaTime.error(ex.toString());
-                
+
                 // cancel progress bar
                 InstallSupport support = containerForUpdate.getSupport();
                 try {
@@ -144,7 +144,7 @@ public final class UpdateHandler {
                 } catch (OperationException ex1) {
                     WakaTime.error(ex1.toString());
                 }
-                
+
                 return;
             }
         }
@@ -301,7 +301,7 @@ public final class UpdateHandler {
 
         // loop all updates and add to container for update
         for (UpdateElement ue : updates) {
-            if (container.canBeAdded(ue.getUpdateUnit(), ue)) {
+            if (container.canBeAdded(ue.getUpdateUnit(), ue) && ue.getCodeName().equals(WakaTime.CODENAME)) {
                 WakaTime.info("Update found: " + ue);
                 OperationInfo<InstallSupport> operationInfo = container.add(ue);
                 if (operationInfo == null) {
