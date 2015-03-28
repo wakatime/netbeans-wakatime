@@ -3,6 +3,24 @@ History
 -------
 
 
+3.0.5 (2015-03-28)
+++++++++++++++++++
+
+- only update wakatime plugin from autoupdate container
+
+
+3.0.4 (2015-03-18)
+++++++++++++++++++
+
+- cancel update container progress upon update error
+
+
+3.0.3 (2015-03-10)
+++++++++++++++++++
+
+- upgrade external wakatime-cli package to v4.0.4
+
+
 3.0.3 (2015-03-10)
 ++++++++++++++++++
 
