@@ -177,14 +177,16 @@ public final class UpdateHandler {
             // have a problem => cannot continue
             throw new UpdateHandlerException("Cannot continue because license approval is missing.");
         }
+        
+        InstallSupport support = container.getSupport();
 
         // download
-        InstallSupport support = container.getSupport();
         Validator v = null;
         try {
             v = doDownload(support);
         } catch (OperationException ex) {
-            // caught a exception
+            throw new UpdateHandlerException("A problem caught while downloading, cause: ", ex);
+        } catch (NullPointerException ex) {
             throw new UpdateHandlerException("A problem caught while downloading, cause: ", ex);
         }
         if (v == null) {
