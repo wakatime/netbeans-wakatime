@@ -3,6 +3,14 @@ History
 -------
 
 
+3.0.6 (2015-05-04)
+++++++++++++++++++
+
+- update wakatime cli to v4.0.8
+- catch NullPointerException when downloading new wakatime plugin update
+- download and install python on Windows OS when not already available
+
+
 3.0.5 (2015-03-28)
 ++++++++++++++++++
 
