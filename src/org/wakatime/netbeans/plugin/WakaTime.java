@@ -66,48 +66,58 @@ public class WakaTime extends ModuleInstall implements Runnable {
             WakaTime.info("wakatime-cli is up to date.");
         }
 
-        if (Dependencies.isPythonInstalled()) {
+        if (!Dependencies.isPythonInstalled()) {
+            
+            WakaTime.info("Python not found, downloading python...");
 
-            WakaTime.DEBUG = WakaTime.isDebugEnabled();
-            if (WakaTime.DEBUG) {
-                log.setLevel(Level.CONFIG);
-                WakaTime.debug("Logging level set to DEBUG");
+            // download and install python
+            Dependencies.installPython();
+
+            if (Dependencies.isPythonInstalled()) {
+                log.info("Finished installing python...");
+            } else {
+                WakaTime.error("WakaTime requires Python to be installed.");
+                String msg = "WakaTime requires Python to be installed and in your system PATH.\nYou can install Python from https://www.python.org/downloads/\nAfter installing Python, restart your IDE.";
+                WakaTime.errorDialog(msg);
             }
-
-            WakaTime.debug("Python location: " + Dependencies.getPythonLocation());
-            WakaTime.debug("CLI location: " + Dependencies.getCLILocation());
-
-            // prompt for apiKey if it does not already exist
-            String apiKey = ApiKey.getApiKey();
-            if (apiKey.equals("")) {
-                apiKey = ApiKey.promptForApiKey();
-                if (apiKey != null && !apiKey.equals(""))
-                    ApiKey.saveApiKey(apiKey);
-            }
-            WakaTime.debug("API Key: "+ApiKey.getApiKey());
-
-            // Listen for changes to documents
-            PropertyChangeListener l = new PropertyChangeListener() {
-                @Override
-                public void propertyChange(PropertyChangeEvent evt) {
-                    JTextComponent jtc = EditorRegistry.lastFocusedComponent();
-                    if (jtc != null) {
-                        Document d = jtc.getDocument();
-                        CustomDocumentListener listener = new CustomDocumentListener(d);
-                        d.addDocumentListener(listener);
-                        listener.update();
-                    }
-                }
-            };
-
-            EditorRegistry.addPropertyChangeListener(l);
-
-            WakaTime.info("Finished initializing WakaTime plugin.");
-        } else {
-            WakaTime.error("WakaTime requires Python to be installed.");
-            String msg = "WakaTime requires Python to be installed and in your system PATH.\nYou can install Python from https://www.python.org/downloads/\nAfter installing Python, restart your IDE.";
-            WakaTime.errorDialog(msg);
+            
         }
+
+        WakaTime.DEBUG = WakaTime.isDebugEnabled();
+        if (WakaTime.DEBUG) {
+            log.setLevel(Level.CONFIG);
+            WakaTime.debug("Logging level set to DEBUG");
+        }
+
+        WakaTime.debug("Python location: " + Dependencies.getPythonLocation());
+        WakaTime.debug("CLI location: " + Dependencies.getCLILocation());
+
+        // prompt for apiKey if it does not already exist
+        String apiKey = ApiKey.getApiKey();
+        if (apiKey.equals("")) {
+            apiKey = ApiKey.promptForApiKey();
+            if (apiKey != null && !apiKey.equals(""))
+                ApiKey.saveApiKey(apiKey);
+        }
+        WakaTime.debug("API Key: "+ApiKey.getApiKey());
+
+        // Listen for changes to documents
+        PropertyChangeListener l = new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                JTextComponent jtc = EditorRegistry.lastFocusedComponent();
+                if (jtc != null) {
+                    Document d = jtc.getDocument();
+                    CustomDocumentListener listener = new CustomDocumentListener(d);
+                    d.addDocumentListener(listener);
+                    listener.update();
+                }
+            }
+        };
+
+        EditorRegistry.addPropertyChangeListener(l);
+
+        WakaTime.info("Finished initializing WakaTime plugin.");
 
         // install update checker when UI is ready (main window shown)
         WindowManager.getDefault().invokeWhenUIReady(new Runnable () {
