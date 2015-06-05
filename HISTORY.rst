@@ -36,12 +36,6 @@ History
 - upgrade external wakatime-cli package to v4.0.4
 
 
-3.0.3 (2015-03-10)
-++++++++++++++++++
-
-- upgrade external wakatime-cli package to v4.0.4
-
-
 3.0.2 (2015-03-06)
 ++++++++++++++++++
 
