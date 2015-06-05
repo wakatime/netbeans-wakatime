@@ -123,7 +123,11 @@ public class WakaTime extends ModuleInstall implements Runnable {
         WindowManager.getDefault().invokeWhenUIReady(new Runnable () {
             @Override
             public void run () {
-              UpdateHandler.checkAndHandleUpdates();
+                try {
+                    UpdateHandler.checkAndHandleUpdates();
+                } catch(NullPointerException e) {
+                    WakaTime.error(e.toString());
+                }
             }
         });
     }
