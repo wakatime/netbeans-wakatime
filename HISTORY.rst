@@ -3,6 +3,13 @@ History
 -------
 
 
+3.0.7 (2015-06-05)
+++++++++++++++++++
+
+- update wakatime cli to v4.0.14
+- catch NullPointerException from UpdateHandler
+
+
 3.0.6 (2015-05-04)
 ++++++++++++++++++
 
