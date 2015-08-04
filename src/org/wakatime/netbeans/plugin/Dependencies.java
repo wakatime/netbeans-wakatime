@@ -93,7 +93,8 @@ public class Dependencies {
         };
         for (String path : paths) {
             try {
-                Runtime.getRuntime().exec(path);
+                String[] cmds = { path, "--version" };
+                Runtime.getRuntime().exec(cmds);
                 Dependencies.pythonLocation = path;
                 break;
             } catch (Exception e) { }
@@ -116,8 +117,20 @@ public class Dependencies {
         cmds.add("--version");
         try {
             Process p = Runtime.getRuntime().exec(cmds.toArray(new String[cmds.size()]));
-            BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-            if (cliVersion.equals(stdError.readLine())) {
+            BufferedReader stdInput = new BufferedReader(new
+                    InputStreamReader(p.getInputStream()));
+            BufferedReader stdError = new BufferedReader(new
+                    InputStreamReader(p.getErrorStream()));
+            p.waitFor();
+            String output = "";
+            String s;
+            while ((s = stdInput.readLine()) != null) {
+                output += s;
+            }
+            while ((s = stdError.readLine()) != null) {
+                output += s;
+            }
+            if (p.exitValue() == 0 && output.contains(cliVersion)) {
                 return false;
             }
         } catch (Exception e) { }
@@ -125,7 +138,7 @@ public class Dependencies {
     }
 
     public static String getCLILocation() {
-        return Dependencies.getResourcesLocation()+File.separator+"wakatime-master"+File.separator+"wakatime"+File.separator+"cli.py";
+        return combinePaths(Dependencies.getResourcesLocation(), "wakatime-master", "wakatime", "cli.py");
     }
 
     public static void installCLI() {
@@ -137,7 +150,7 @@ public class Dependencies {
         try {
             url = new URL("https://codeload.github.com/wakatime/wakatime/zip/master");
         } catch (MalformedURLException e) { }
-        String zipFile = cli.getParentFile().getParentFile().getParentFile().getAbsolutePath()+File.separator+"wakatime-cli.zip";
+        String zipFile = combinePaths(cli.getParentFile().getParentFile().getParentFile().getAbsolutePath(), "wakatime-cli.zip");
         File outputDir = cli.getParentFile().getParentFile().getParentFile();
 
         // Delete old wakatime-master directory if it exists
@@ -173,7 +186,7 @@ public class Dependencies {
             }
 
             File cli = new File(Dependencies.getCLILocation());
-            String outFile = cli.getParentFile().getParentFile().getAbsolutePath()+File.separator+"python.msi";
+            String outFile = combinePaths(cli.getParentFile().getParentFile().getAbsolutePath(), "python.msi");
             if (downloadFile(url, outFile)) {
 
                 // execute python msi installer
@@ -190,6 +203,19 @@ public class Dependencies {
                 }
             }
         }
+    }
+    
+    public static String combinePaths(String... args) {
+        File path = null;
+        for (String arg : args) {
+            if (path == null)
+                path = new File(arg);
+            else
+                path = new File(path, arg);
+        }
+        if (path == null)
+            return null;
+        return path.toString();
     }
 
     public static boolean downloadFile(String url, String saveAs) {
