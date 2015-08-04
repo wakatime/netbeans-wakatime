@@ -3,6 +3,19 @@ History
 -------
 
 
+3.0.8 (2015-08-03)
+++++++++++++++++++
+
+- send heartbeat in background thread
+- update wakatime cli to v4.1.0
+- guess language using multiple methods, then use most accurate guess
+- use entity and type for new heartbeats api resource schema
+- fix offline logging
+- limit language detection to known file extensions, unless file contents has a vim modeline
+- correct priority for project detection
+
+
+
 3.0.7 (2015-06-05)
 ++++++++++++++++++
 
