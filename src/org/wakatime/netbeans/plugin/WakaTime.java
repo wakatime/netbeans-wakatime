@@ -81,6 +81,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
                 WakaTime.error("WakaTime requires Python to be installed.");
                 String msg = "WakaTime requires Python to be installed and in your system PATH.\nYou can install Python from https://www.python.org/downloads/\nAfter installing Python, restart your IDE.";
                 WakaTime.errorDialog(msg);
+                return;
             }
             
         }
@@ -101,7 +102,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
             if (apiKey != null && !apiKey.equals(""))
                 ApiKey.saveApiKey(apiKey);
         }
-        WakaTime.debug("API Key: "+ApiKey.getApiKey());
+        WakaTime.debug("API Key: " + obfuscateKey(ApiKey.getApiKey()));
 
         // Listen for changes to documents
         PropertyChangeListener l = new PropertyChangeListener() {
@@ -250,5 +251,15 @@ public class WakaTime extends ModuleInstall implements Runnable {
         if (isWrite)
             cmds.add("--write");
         return cmds.toArray(new String[cmds.size()]);
+    }
+    
+    private static String obfuscateKey(String key) {
+        String newKey = null;
+        if (key != null) {
+            newKey = key;
+            if (key.length() > 4)
+                newKey = "********-****-****-****-********" + key.substring(key.length() - 4);
+        }
+        return newKey;
     }
 }
