@@ -71,8 +71,6 @@ import org.openide.util.NbBundle;
  */
 public final class UpdateHandler {
 
-    public static final String CODE_NAME = "org_wakatime_netbeans_plugin_update_center"; // NOI18N
-
     public static boolean timeToCheck() {
         // every startup
         return true;
@@ -89,7 +87,7 @@ public final class UpdateHandler {
 
     public static void checkAndHandleUpdates() {
 
-        WakaTime.info("Checking for updates...");
+        WakaTime.info("Checking for updates to WakaTime plugin...");
 
         // refresh silent update center first
         refreshSilentUpdateProvider();
@@ -101,18 +99,18 @@ public final class UpdateHandler {
         }
         if (updates.isEmpty() && available.isEmpty()) {
             // none for install
-            WakaTime.info("Plugin is up to date.");
+            WakaTime.info("WakaTime plugin is up to date.");
             return;
         }
 
-        WakaTime.info("Found new plugin version, updating...");
+        WakaTime.info("Found new WakaTime plugin version, updating...");
 
         // create a container for install
         OperationContainer<InstallSupport> containerForInstall = feedContainer(available, false);
         if (containerForInstall != null) {
             try {
                 handleInstall(containerForInstall);
-                WakaTime.info("Plugin installation finished.");
+                WakaTime.info("WakaTime plugin installation finished.");
             } catch (UpdateHandlerException ex) {
                 WakaTime.error(ex.toString());
 
@@ -133,7 +131,7 @@ public final class UpdateHandler {
         if (containerForUpdate != null) {
             try {
                 handleInstall(containerForUpdate);
-                WakaTime.info("Plugin update finished.");
+                WakaTime.info("WakaTime plugin update finished.");
             } catch (UpdateHandlerException ex) {
                 WakaTime.error(ex.toString());
 
@@ -163,8 +161,10 @@ public final class UpdateHandler {
         List<UpdateUnit> updateUnits = UpdateManager.getDefault().getUpdateUnits();
         for (UpdateUnit unit : updateUnits) {
             if (unit.getInstalled() != null) { // means the plugin already installed
-                if (!unit.getAvailableUpdates().isEmpty()) { // has updates
-                    elements4update.add(unit.getAvailableUpdates().get(0)); // add plugin with highest version
+                if (unit.getCodeName().equals(WakaTime.CODENAME)) { // this is our current plugin
+                    if (!unit.getAvailableUpdates().isEmpty()) { // has updates
+                        elements4update.add(unit.getAvailableUpdates().get(0)); // add plugin with highest version
+                    }
                 }
             }
         }
@@ -226,8 +226,10 @@ public final class UpdateHandler {
         List<UpdateUnit> updateUnits = UpdateManager.getDefault().getUpdateUnits();
         for (UpdateUnit unit : updateUnits) {
             if (unit.getInstalled() == null) { // means the plugin is not installed yet
-                if (!unit.getAvailableUpdates().isEmpty()) { // is available
-                    elements4install.add(unit.getAvailableUpdates().get(0)); // add plugin with highest version
+                if (unit.getCodeName().equals(WakaTime.CODENAME)) { // this is our current plugin
+                    if (!unit.getAvailableUpdates().isEmpty()) { // is available
+                        elements4install.add(unit.getAvailableUpdates().get(0)); // add plugin with highest version
+                    }
                 }
             }
         }
@@ -263,8 +265,9 @@ public final class UpdateHandler {
 
     static UpdateUnitProvider getSilentUpdateProvider() {
         List<UpdateUnitProvider> providers = UpdateUnitProviderFactory.getDefault().getUpdateUnitProviders(true);
+        String oldCodename = "org_wakatime_netbeans_plugin_update_center";
         for (UpdateUnitProvider p : providers) {
-            if(CODE_NAME.equals(p.getName())) {
+            if (p.getName().equals(oldCodename) || p.getName().equals(WakaTime.CODENAME)) { // this is our current plugin
                 try {
                     final String displayName = "Checking for updates to WakaTime plugin...";
                     p.refresh(
@@ -304,7 +307,7 @@ public final class UpdateHandler {
         // loop all updates and add to container for update
         for (UpdateElement ue : updates) {
             if (container.canBeAdded(ue.getUpdateUnit(), ue) && ue.getCodeName().equals(WakaTime.CODENAME)) {
-                WakaTime.info("Update found: " + ue);
+                WakaTime.info("Update to WakaTime plugin found: " + ue);
                 OperationInfo<InstallSupport> operationInfo = container.add(ue);
                 if (operationInfo == null) {
                     continue;
