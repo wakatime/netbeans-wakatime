@@ -32,6 +32,8 @@ import org.openide.*;
 import org.openide.modules.ModuleInstall;
 import org.openide.windows.OnShowing;
 import org.openide.windows.WindowManager;
+import static org.wakatime.netbeans.plugin.WakaTime.IDE_NAME;
+import static org.wakatime.netbeans.plugin.WakaTime.IDE_VERSION;
 
 @OnShowing
 public class WakaTime extends ModuleInstall implements Runnable {
@@ -200,6 +202,38 @@ public class WakaTime extends ModuleInstall implements Runnable {
     }
 
     public static void logFile(String file, Project currentProject, boolean isWrite) {
+        final String[] cmds = buildCliCommand(file, currentProject, isWrite);
+        WakaTime.debug("Executing CLI: " + Arrays.toString(cmds));
+        Runnable r = new Runnable() {
+            public void run() {
+                try {
+                    Process proc = Runtime.getRuntime().exec(cmds);
+                    if (WakaTime.DEBUG) {
+                        BufferedReader stdInput = new BufferedReader(new
+                                InputStreamReader(proc.getInputStream()));
+                        BufferedReader stdError = new BufferedReader(new
+                                InputStreamReader(proc.getErrorStream()));
+                        proc.waitFor();
+                        String s;
+                        while ((s = stdInput.readLine()) != null) {
+                            WakaTime.debug(s);
+                        }
+                        while ((s = stdError.readLine()) != null) {
+                            WakaTime.debug(s);
+                        }
+                        WakaTime.debug("Command finished with return value: "+proc.exitValue());
+                    }
+                } catch (IOException e) {
+                    WakaTime.error(e.toString());
+                } catch (InterruptedException e) {
+                    WakaTime.error(e.toString());
+                }
+                }
+        };
+        new Thread(r).start();
+    }
+
+    public static String[] buildCliCommand(String file, Project currentProject, boolean isWrite) {
         ArrayList<String> cmds = new ArrayList<String>();
         cmds.add(Dependencies.getPythonLocation());
         cmds.add(Dependencies.getCLILocation());
@@ -215,28 +249,6 @@ public class WakaTime extends ModuleInstall implements Runnable {
         cmds.add(IDE_NAME+"/"+IDE_VERSION+" "+IDE_NAME.toLowerCase()+"-wakatime/"+WakaTime.VERSION);
         if (isWrite)
             cmds.add("--write");
-        try {
-            WakaTime.debug("Executing CLI: " + Arrays.toString(cmds.toArray()));
-            Process proc = Runtime.getRuntime().exec(cmds.toArray(new String[cmds.size()]));
-            if (WakaTime.DEBUG) {
-                BufferedReader stdInput = new BufferedReader(new
-                        InputStreamReader(proc.getInputStream()));
-                BufferedReader stdError = new BufferedReader(new
-                        InputStreamReader(proc.getErrorStream()));
-                proc.waitFor();
-                String s;
-                while ((s = stdInput.readLine()) != null) {
-                    WakaTime.debug(s);
-                }
-                while ((s = stdError.readLine()) != null) {
-                    WakaTime.debug(s);
-                }
-                WakaTime.debug("Command finished with return value: "+proc.exitValue());
-            }
-        } catch (IOException e) {
-            WakaTime.error(e.toString());
-        } catch (InterruptedException e) {
-            WakaTime.error(e.toString());
-        }
+        return cmds.toArray(new String[cmds.size()]);
     }
 }
