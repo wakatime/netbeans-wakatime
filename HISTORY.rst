@@ -3,6 +3,12 @@ History
 -------
 
 
+3.0.9 (2015-08-03)
+++++++++++++++++++
+
+- fix NullPointerException in auto update handler
+
+
 3.0.8 (2015-08-03)
 ++++++++++++++++++
 
