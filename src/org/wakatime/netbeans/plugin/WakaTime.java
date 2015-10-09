@@ -45,10 +45,12 @@ public class WakaTime extends ModuleInstall implements Runnable {
 
     public static String VERSION = "Unknown";
     public static String IDE_VERSION = "Unknown";
-    public static String lastFile = null;
-    public static long lastTime = 0;
     public static Boolean DEBUG = false;
     public static CustomDocumentListener documentListener = null;
+    
+    public static Boolean READY = false;
+    public static String lastFile = null;
+    public static long lastTime = 0;
 
     @Override
     public void run() {
@@ -56,15 +58,24 @@ public class WakaTime extends ModuleInstall implements Runnable {
         WakaTime.IDE_VERSION = System.getProperty("netbeans.buildnumber");
         WakaTime.log.log(Level.INFO, "Initializing WakaTime plugin v{0} (https://wakatime.com/)", WakaTime.VERSION);
 
+        WakaTime.DEBUG = WakaTime.isDebugEnabled();
+        if (WakaTime.DEBUG) {
+            log.setLevel(Level.CONFIG);
+            WakaTime.debug("Logging level set to DEBUG");
+        }
+
         if (!Dependencies.isCLIInstalled()) {
             WakaTime.info("Downloading and installing wakatime-cli ...");
             Dependencies.installCLI();
+            WakaTime.READY = true;
             WakaTime.info("Finished downloading and installing wakatime-cli.");
         } else if (Dependencies.isCLIOld()) {
             WakaTime.info("Upgrading wakatime-cli ...");
             Dependencies.upgradeCLI();
+            WakaTime.READY = true;
             WakaTime.info("Finished upgrading wakatime-cli.");
         } else {
+            WakaTime.READY = true;
             WakaTime.info("wakatime-cli is up to date.");
         }
 
@@ -84,12 +95,6 @@ public class WakaTime extends ModuleInstall implements Runnable {
                 return;
             }
             
-        }
-
-        WakaTime.DEBUG = WakaTime.isDebugEnabled();
-        if (WakaTime.DEBUG) {
-            log.setLevel(Level.CONFIG);
-            WakaTime.debug("Logging level set to DEBUG");
         }
 
         WakaTime.debug("Python location: " + Dependencies.getPythonLocation());
@@ -201,10 +206,15 @@ public class WakaTime extends ModuleInstall implements Runnable {
         }
         return "Unknown";
     }
+    
+    public static void sendHeartbeat(String file, Project currentProject, boolean isWrite) {
+        if (WakaTime.READY)
+            sendHeartbeat(file, currentProject, isWrite, 0);
+    }
 
-    public static void logFile(String file, Project currentProject, boolean isWrite) {
+    private static void sendHeartbeat(final String file, final Project currentProject, final boolean isWrite, final int tries) {
         final String[] cmds = buildCliCommand(file, currentProject, isWrite);
-        WakaTime.debug("Executing CLI: " + Arrays.toString(cmds));
+        WakaTime.debug("Executing CLI: " + Arrays.toString(obfuscateKey(cmds)));
         Runnable r = new Runnable() {
             public void run() {
                 try {
@@ -224,12 +234,20 @@ public class WakaTime extends ModuleInstall implements Runnable {
                         }
                         WakaTime.debug("Command finished with return value: "+proc.exitValue());
                     }
-                } catch (IOException e) {
-                    WakaTime.error(e.toString());
-                } catch (InterruptedException e) {
-                    WakaTime.error(e.toString());
+                } catch (Exception e) {
+                    if (tries < 3) {
+                        WakaTime.debug(e.toString());
+                        try {
+                            Thread.sleep(30);
+                        } catch (InterruptedException e1) {
+                            WakaTime.error(e1.toString());
+                        }
+                        sendHeartbeat(file, currentProject, isWrite, tries + 1);
+                    } else {
+                        WakaTime.error(e.toString());
+                    }
                 }
-                }
+            }
         };
         new Thread(r).start();
     }
@@ -258,8 +276,21 @@ public class WakaTime extends ModuleInstall implements Runnable {
         if (key != null) {
             newKey = key;
             if (key.length() > 4)
-                newKey = "********-****-****-****-********" + key.substring(key.length() - 4);
+                newKey = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXX" + key.substring(key.length() - 4);
         }
         return newKey;
+    }
+
+    private static String[] obfuscateKey(String[] cmds) {
+        ArrayList<String> newCmds = new ArrayList<String>();
+        String lastCmd = "";
+        for (String cmd : cmds) {
+            if (lastCmd == "--key")
+                newCmds.add(obfuscateKey(cmd));
+            else
+                newCmds.add(cmd);
+            lastCmd = cmd;
+        }
+        return newCmds.toArray(new String[newCmds.size()]);
     }
 }

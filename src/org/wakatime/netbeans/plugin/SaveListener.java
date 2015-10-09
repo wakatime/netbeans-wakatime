@@ -34,7 +34,7 @@ public class SaveListener implements OnSaveTask {
                 @Override
                 public void run() {
                     final String currentFile = file.getPath();
-                    WakaTime.logFile(currentFile, currentProject, true);
+                    WakaTime.sendHeartbeat(currentFile, currentProject, true);
                     WakaTime.lastFile = currentFile;
                     WakaTime.lastTime = currentTime;
                 }

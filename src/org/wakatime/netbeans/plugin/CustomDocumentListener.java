@@ -63,7 +63,7 @@ public class CustomDocumentListener implements DocumentListener {
                 public void run() {
                     final String currentFile = file.getPath();
                     if ((!currentFile.equals(WakaTime.lastFile) || WakaTime.enoughTimePassed(currentTime))) {
-                        WakaTime.logFile(currentFile, currentProject, false);
+                        WakaTime.sendHeartbeat(currentFile, currentProject, false);
                         WakaTime.lastFile = currentFile;
                         WakaTime.lastTime = currentTime;
                     }

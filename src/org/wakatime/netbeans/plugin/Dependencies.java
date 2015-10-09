@@ -8,20 +8,29 @@ Website:     https://wakatime.com/
 
 package org.wakatime.netbeans.plugin;
 
+import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.WinReg;
+
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
 
 public class Dependencies {
 
     private static String pythonLocation = null;
     private static String resourcesLocation = null;
-    private static final String cliVersion = "4.1.0";
 
     public static boolean isPythonInstalled() {
         return Dependencies.getPythonLocation() != null;
@@ -41,61 +50,56 @@ public class Dependencies {
     public static String getPythonLocation() {
         if (Dependencies.pythonLocation != null)
             return Dependencies.pythonLocation;
-        String []paths = new String[] {
-                "pythonw",
-                "python",
-                "/usr/local/bin/python",
-                "/usr/bin/python",
-                "\\python37\\pythonw",
-                "\\Python37\\pythonw",
-                "\\python36\\pythonw",
-                "\\Python36\\pythonw",
-                "\\python35\\pythonw",
-                "\\Python35\\pythonw",
-                "\\python34\\pythonw",
-                "\\Python34\\pythonw",
-                "\\python33\\pythonw",
-                "\\Python33\\pythonw",
-                "\\python32\\pythonw",
-                "\\Python32\\pythonw",
-                "\\python31\\pythonw",
-                "\\Python31\\pythonw",
-                "\\python30\\pythonw",
-                "\\Python30\\pythonw",
-                "\\python27\\pythonw",
-                "\\Python27\\pythonw",
-                "\\python26\\pythonw",
-                "\\Python26\\pythonw",
-                "\\python37\\python",
-                "\\Python37\\python",
-                "\\python36\\python",
-                "\\Python36\\python",
-                "\\python35\\python",
-                "\\Python35\\python",
-                "\\python34\\python",
-                "\\Python34\\python",
-                "\\python33\\python",
-                "\\Python33\\python",
-                "\\python32\\python",
-                "\\Python32\\python",
-                "\\python31\\python",
-                "\\Python31\\python",
-                "\\python30\\python",
-                "\\Python30\\python",
-                "\\python27\\python",
-                "\\Python27\\python",
-                "\\python26\\python",
-                "\\Python26\\python",
-        };
+        ArrayList<String> paths = new ArrayList<String>();
+        paths.add(null);
+        paths.add("/");
+        paths.add("/usr/local/bin/");
+        paths.add("/usr/bin/");
+        paths.add(getPythonFromRegistry(WinReg.HKEY_CURRENT_USER));
+        paths.add(getPythonFromRegistry(WinReg.HKEY_LOCAL_MACHINE));
+        paths.add("/python34");
+        paths.add("/python33");
+        paths.add("/python27");
+        paths.add("/python26");
         for (String path : paths) {
             try {
-                String[] cmds = { path, "--version" };
+                String[] cmds = {combinePaths(path, "pythonw"), "--version"};
                 Runtime.getRuntime().exec(cmds);
-                Dependencies.pythonLocation = path;
+                Dependencies.pythonLocation = combinePaths(path, "pythonw");
                 break;
-            } catch (Exception e) { }
+            } catch (Exception e) {
+                try {
+                    String[] cmds = {combinePaths(path, "python"), "--version"};
+                    Runtime.getRuntime().exec(cmds);
+                    Dependencies.pythonLocation = combinePaths(path, "python");
+                    break;
+                } catch (Exception e2) { }
+            }
+        }
+        if (Dependencies.pythonLocation != null) {
+            WakaTime.debug("Found python binary: " + Dependencies.pythonLocation);
+        } else {
+            WakaTime.warn("Could not find python binary.");
         }
         return Dependencies.pythonLocation;
+    }
+
+    public static String getPythonFromRegistry(WinReg.HKEY hkey) {
+        String path = null;
+        if (System.getProperty("os.name").contains("Windows")) {
+            try {
+                String key = "Software\\\\Python\\\\PythonCore";
+                for (String version : Advapi32Util.registryGetKeys(hkey, key)) {
+                    path = Advapi32Util.registryGetStringValue(hkey, key + "\\" + version + "\\InstallPath", "");
+                    if (path != null) {
+                        break;
+                    }
+                }
+            }  catch (Exception e) {
+                WakaTime.debug(e.toString());
+            }
+        }
+        return path;
     }
 
     public static boolean isCLIInstalled() {
@@ -126,11 +130,28 @@ public class Dependencies {
             while ((s = stdError.readLine()) != null) {
                 output += s;
             }
-            if (p.exitValue() == 0 && output.contains(cliVersion)) {
-                return false;
+            WakaTime.debug("wakatime cli version check output: \"" + output + "\"");
+            WakaTime.debug("wakatime cli version check exit code: " + p.exitValue());
+
+            if (p.exitValue() == 0) {
+                String cliVersion = latestCliVersion();
+                WakaTime.debug("Current cli version from GitHub: " + cliVersion);
+                if (output.contains(cliVersion))
+                    return false;
             }
         } catch (Exception e) { }
         return true;
+    }
+
+    public static String latestCliVersion() {
+        String url = "https://raw.githubusercontent.com/wakatime/wakatime/master/wakatime/__about__.py";
+        String aboutText = getUrlAsString(url);
+        Pattern p = Pattern.compile("__version_info__ = \\('([0-9]+)', '([0-9]+)', '([0-9]+)'\\)");
+        Matcher m = p.matcher(aboutText);
+        if (m.find()) {
+            return m.group(1) + "." + m.group(2) + "." + m.group(3);
+        }
+        return "Unknown";
     }
 
     public static String getCLILocation() {
@@ -201,19 +222,6 @@ public class Dependencies {
         }
     }
     
-    public static String combinePaths(String... args) {
-        File path = null;
-        for (String arg : args) {
-            if (path == null)
-                path = new File(arg);
-            else
-                path = new File(path, arg);
-        }
-        if (path == null)
-            return null;
-        return path.toString();
-    }
-
     public static boolean downloadFile(String url, String saveAs) {
         File outFile = new File(saveAs);
 
@@ -233,15 +241,81 @@ public class Dependencies {
             rbc = Channels.newChannel(downloadUrl.openStream());
             fos = new FileOutputStream(saveAs);
             fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-
             return true;
-        } catch (IOException ex) {
-            WakaTime.error("An error occured while downloading dependency: " + ex);
+        } catch (RuntimeException e) {
+            WakaTime.error(e.toString());
+            try {
+                // try downloading without verifying SSL cert (https://github.com/wakatime/jetbrains-wakatime/issues/46)
+                SSLContext SSL_CONTEXT = SSLContext.getInstance("SSL");
+                SSL_CONTEXT.init(null, new TrustManager[] { new LocalSSLTrustManager() }, null);
+                HttpsURLConnection.setDefaultSSLSocketFactory(SSL_CONTEXT.getSocketFactory());
+                HttpsURLConnection conn = (HttpsURLConnection)downloadUrl.openConnection();
+                InputStream inputStream = conn.getInputStream();
+                fos = new FileOutputStream(saveAs);
+                int bytesRead = -1;
+                byte[] buffer = new byte[4096];
+                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                    fos.write(buffer, 0, bytesRead);
+                }
+                inputStream.close();
+                return true;
+            } catch (NoSuchAlgorithmException e1) {
+                WakaTime.error(e1.toString());
+            } catch (KeyManagementException e1) {
+                WakaTime.error(e1.toString());
+            } catch (IOException e1) {
+                WakaTime.error(e1.toString());
+            }
+        } catch (IOException e) {
+            WakaTime.error(e.toString());
         }
 
         return false;
     }
-    
+
+    public static String getUrlAsString(String url) {
+        StringBuilder text = new StringBuilder();
+
+        URL downloadUrl = null;
+        try {
+            downloadUrl = new URL(url);
+        } catch (MalformedURLException e) { }
+
+        try {
+            InputStream inputStream = downloadUrl.openStream();
+            byte[] buffer = new byte[4096];
+            while (inputStream.read(buffer) != -1) {
+                text.append(new String(buffer, "UTF-8"));
+            }
+            inputStream.close();
+        } catch (RuntimeException e) {
+            WakaTime.error(e.toString());
+            try {
+                // try downloading without verifying SSL cert (https://github.com/wakatime/jetbrains-wakatime/issues/46)
+                SSLContext SSL_CONTEXT = SSLContext.getInstance("SSL");
+                SSL_CONTEXT.init(null, new TrustManager[] { new LocalSSLTrustManager() }, null);
+                HttpsURLConnection.setDefaultSSLSocketFactory(SSL_CONTEXT.getSocketFactory());
+                HttpsURLConnection conn = (HttpsURLConnection)downloadUrl.openConnection();
+                InputStream inputStream = conn.getInputStream();
+                byte[] buffer = new byte[4096];
+                while (inputStream.read(buffer) != -1) {
+                    text.append(new String(buffer, "UTF-8"));
+                }
+                inputStream.close();
+            } catch (NoSuchAlgorithmException e1) {
+                WakaTime.error(e1.toString());
+            } catch (KeyManagementException e1) {
+                WakaTime.error(e1.toString());
+            } catch (IOException e1) {
+                WakaTime.error(e1.toString());
+            }
+        } catch (IOException e) {
+            WakaTime.error(e.toString());
+        }
+
+        return text.toString();
+    }
+
     private static void unzip(String zipFile, File outputDir) throws IOException {
         if(!outputDir.exists())
             outputDir.mkdirs();
@@ -271,7 +345,7 @@ public class Dependencies {
         zis.closeEntry();
         zis.close();
     }
-    
+
     private static void deleteDirectory(File path) {
         if( path.exists() ) {
             File[] files = path.listFiles();
@@ -285,5 +359,20 @@ public class Dependencies {
             }
         }
         path.delete();
+    }
+
+    private static String combinePaths(String... args) {
+        File path = null;
+        for (String arg : args) {
+            if (arg != null) {
+                if (path == null)
+                    path = new File(arg);
+                else
+                    path = new File(path, arg);
+            }
+        }
+        if (path == null)
+            return null;
+        return path.toString();
     }
 }
