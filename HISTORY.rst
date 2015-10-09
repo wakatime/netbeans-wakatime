@@ -3,6 +3,13 @@ History
 -------
 
 
+4.0.0 (2015-10-09)
+++++++++++++++++++
+
+- fix location of resources directory
+- get current wakatime cli version number from GitHub repository
+
+
 3.0.10 (2015-08-03)
 ++++++++++++++++++
 
