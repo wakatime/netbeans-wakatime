@@ -29,15 +29,11 @@ public class Dependencies {
 
     public static String getResourcesLocation() {
         if (Dependencies.resourcesLocation == null) {
-            String separator = "[\\\\/]";
-            Dependencies.resourcesLocation = WakaTime.class.getResource("WakaTime.class").getPath()
-                    .replaceFirst("file:", "")
-                    .replaceAll("%20", " ")
-                    .replaceFirst("com" + separator + "wakatime" + separator + "intellij" + separator + "plugin" + separator + "WakaTime.class", "")
-                    .replaceFirst("WakaTime.jar!" + separator, "") + "WakaTime-resources";
-            if (System.getProperty("os.name").startsWith("Windows") && Dependencies.resourcesLocation.startsWith("/")) {
-                Dependencies.resourcesLocation = Dependencies.resourcesLocation.substring(1);
+            File dir  = new File(System.getProperty("user.home"), ".wakatime");
+            if (!dir.exists()) {
+                dir.mkdir();
             }
+            Dependencies.resourcesLocation = dir.getAbsolutePath();
         }
         return Dependencies.resourcesLocation;
     }
