@@ -27,10 +27,7 @@
                 <dependency>
                     <code-name-base>org.netbeans.libs.jna.platform</code-name-base>
                     <build-prerequisite/>
-                    <compile-dependency>
-                        <release-version>1</release-version>
-                        <implementation-version/>
-                    </compile-dependency>
+                    <compile-dependency/>
                     <run-dependency>
                         <release-version>1</release-version>
                         <implementation-version/>
