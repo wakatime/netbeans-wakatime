@@ -3,6 +3,12 @@ History
 -------
 
 
+4.0.1 (2015-10-12)
+++++++++++++++++++
+
+- use wrapped jar for jna.platform because it's version can change in different NetBeans releases
+
+
 4.0.0 (2015-10-09)
 ++++++++++++++++++
 
