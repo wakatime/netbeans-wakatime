@@ -2,11 +2,11 @@
 *.class
 
 # Package Files #
-*.jar
 *.war
 *.ear
 
 .metadata
 bin/
 build/
+release/
 private/
