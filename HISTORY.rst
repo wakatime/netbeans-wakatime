@@ -3,6 +3,12 @@ History
 -------
 
 
+4.0.2 (2015-10-12)
+++++++++++++++++++
+
+- include jna.jar and jna-platform.jar in plugin nbm
+
+
 4.0.1 (2015-10-12)
 ++++++++++++++++++
 
