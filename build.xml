@@ -9,8 +9,8 @@
         <mkdir dir="${cluster}/modules/ext"/>
         <copy todir="${cluster}/modules/ext">
             <fileset dir="lib">
-                <include name="jna.jar"/>
-                <include name="jna-platform.jar"/>
+                <include name="jna-4.2.0.jar"/>
+                <include name="jna-platform-4.2.0.jar"/>
             </fileset>
         </copy>        
     </target>

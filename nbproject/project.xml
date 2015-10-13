@@ -169,12 +169,12 @@
             </module-dependencies>
             <public-packages/>
             <class-path-extension>
-                <runtime-relative-path>ext/jna.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jna.jar</binary-origin>
+                <runtime-relative-path>ext/jna-4.2.0.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jna-4.2.0.jar</binary-origin>
             </class-path-extension>
             <class-path-extension>
-                <runtime-relative-path>ext/jna-platform.jar</runtime-relative-path>
-                <binary-origin>release/modules/ext/jna-platform.jar</binary-origin>
+                <runtime-relative-path>ext/jna-platform-4.2.0.jar</runtime-relative-path>
+                <binary-origin>release/modules/ext/jna-platform-4.2.0.jar</binary-origin>
             </class-path-extension>
         </data>
     </configuration>
