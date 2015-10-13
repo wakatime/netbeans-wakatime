@@ -5,4 +5,13 @@
 <project name="org.wakatime.netbeans.plugin" default="netbeans" basedir=".">
     <description>Builds, tests, and runs the project org.wakatime.netbeans.plugin.</description>
     <import file="nbproject/build-impl.xml"/>
+    <target name="netbeans-extra" depends="init">
+        <mkdir dir="${cluster}/modules/ext"/>
+        <copy todir="${cluster}/modules/ext">
+            <fileset dir="lib">
+                <include name="jna.jar"/>
+                <include name="jna-platform.jar"/>
+            </fileset>
+        </copy>        
+    </target>
 </project>
