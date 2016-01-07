@@ -8,9 +8,6 @@ Website:     https://wakatime.com/
 
 package org.wakatime.netbeans.plugin;
 
-import com.sun.jna.platform.win32.Advapi32Util;
-import com.sun.jna.platform.win32.WinReg;
-
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -38,11 +35,15 @@ public class Dependencies {
 
     public static String getResourcesLocation() {
         if (Dependencies.resourcesLocation == null) {
-            File dir  = new File(System.getProperty("user.home"), ".wakatime");
-            if (!dir.exists()) {
-                dir.mkdir();
+            String separator = "[\\\\/]";
+            Dependencies.resourcesLocation = WakaTime.class.getResource("WakaTime.class").getPath()
+                    .replaceFirst("file:", "")
+                    .replaceAll("%20", " ")
+                    .replaceFirst("com" + separator + "wakatime" + separator + "intellij" + separator + "plugin" + separator + "WakaTime.class", "")
+                    .replaceFirst("WakaTime.jar!" + separator, "") + "WakaTime-resources";
+            if (System.getProperty("os.name").startsWith("Windows") && Dependencies.resourcesLocation.startsWith("/")) {
+                Dependencies.resourcesLocation = Dependencies.resourcesLocation.substring(1);
             }
-            Dependencies.resourcesLocation = dir.getAbsolutePath();
         }
         return Dependencies.resourcesLocation;
     }
@@ -55,12 +56,28 @@ public class Dependencies {
         paths.add("/");
         paths.add("/usr/local/bin/");
         paths.add("/usr/bin/");
-        paths.add(getPythonFromRegistry(WinReg.HKEY_CURRENT_USER));
-        paths.add(getPythonFromRegistry(WinReg.HKEY_LOCAL_MACHINE));
-        paths.add("/python34");
-        paths.add("/python33");
-        paths.add("/python27");
-        paths.add("/python26");
+        if (System.getProperty("os.name").contains("Windows")) {
+            File resourcesLocation = new File(Dependencies.getResourcesLocation());
+            paths.add(combinePaths(resourcesLocation.getAbsolutePath(), "python"));
+            paths.add("/python39");
+            paths.add("/Python39");
+            paths.add("/python38");
+            paths.add("/Python38");
+            paths.add("/python37");
+            paths.add("/Python37");
+            paths.add("/python36");
+            paths.add("/Python36");
+            paths.add("/python35");
+            paths.add("/Python35");
+            paths.add("/python34");
+            paths.add("/Python34");
+            paths.add("/python33");
+            paths.add("/Python33");
+            paths.add("/python27");
+            paths.add("/Python27");
+            paths.add("/python26");
+            paths.add("/Python26");
+        }
         for (String path : paths) {
             try {
                 String[] cmds = {combinePaths(path, "pythonw"), "--version"};
@@ -84,27 +101,11 @@ public class Dependencies {
         return Dependencies.pythonLocation;
     }
 
-    public static String getPythonFromRegistry(WinReg.HKEY hkey) {
-        String path = null;
-        if (System.getProperty("os.name").contains("Windows")) {
-            try {
-                String key = "Software\\\\Python\\\\PythonCore";
-                for (String version : Advapi32Util.registryGetKeys(hkey, key)) {
-                    path = Advapi32Util.registryGetStringValue(hkey, key + "\\" + version + "\\InstallPath", "");
-                    if (path != null) {
-                        break;
-                    }
-                }
-            }  catch (Exception e) {
-                WakaTime.debug(e.toString());
-            }
-        }
-        return path;
-    }
-
     public static boolean isCLIInstalled() {
         File cli = new File(Dependencies.getCLILocation());
-        return (cli.exists() && !cli.isDirectory());
+        WakaTime.debug("WakaTime Core Location: " + cli.getAbsolutePath());
+        WakaTime.debug("WakaTime Core Exists: " + cli.exists());
+        return cli.exists();
     }
 
     public static boolean isCLIOld() {
@@ -163,10 +164,7 @@ public class Dependencies {
         if (!cli.getParentFile().getParentFile().getParentFile().exists())
             cli.getParentFile().getParentFile().getParentFile().mkdirs();
 
-        URL url = null;
-        try {
-            url = new URL("https://codeload.github.com/wakatime/wakatime/zip/master");
-        } catch (MalformedURLException e) { }
+        String url = "https://codeload.github.com/wakatime/wakatime/zip/master";
         String zipFile = combinePaths(cli.getParentFile().getParentFile().getParentFile().getAbsolutePath(), "wakatime-cli.zip");
         File outputDir = cli.getParentFile().getParentFile().getParentFile();
 
@@ -175,19 +173,16 @@ public class Dependencies {
         if (dir.exists()) {
             deleteDirectory(dir);
         }
-        
+
         // download wakatime-master.zip file
-        ReadableByteChannel rbc = null;
-        FileOutputStream fos = null;
-        try {
-            rbc = Channels.newChannel(url.openStream());
-            fos = new FileOutputStream(zipFile);
-            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-            Dependencies.unzip(zipFile, outputDir);
-            File oldZipFile = new File(zipFile);
-            oldZipFile.delete();
-        } catch (IOException e) {
-            WakaTime.error(e.toString());
+        if (downloadFile(url, zipFile)) {
+            try {
+                Dependencies.unzip(zipFile, outputDir);
+                File oldZipFile = new File(zipFile);
+                oldZipFile.delete();
+            } catch (IOException e) {
+                WakaTime.error(e.toString());
+            }
         }
     }
 
@@ -197,31 +192,28 @@ public class Dependencies {
 
     public static void installPython() {
         if (System.getProperty("os.name").contains("Windows")) {
-            String url = "https://www.python.org/ftp/python/3.4.2/python-3.4.2.msi";
-            if (System.getenv("ProgramFiles(x86)") != null) {
-                url = "https://www.python.org/ftp/python/3.4.2/python-3.4.2.amd64.msi";
-            }
+            String pyVer = "3.5.0";
+            String arch = "win32";
+            if (is64bit()) arch = "amd64";
+            String url = "https://www.python.org/ftp/python/" + pyVer + "/python-" + pyVer + "-embed-" + arch + ".zip";
 
-            File cli = new File(Dependencies.getCLILocation());
-            String outFile = combinePaths(cli.getParentFile().getParentFile().getAbsolutePath(), "python.msi");
-            if (downloadFile(url, outFile)) {
+            File dir = new File(Dependencies.getResourcesLocation());
+            File zipFile = new File(combinePaths(dir.getAbsolutePath(), "python.zip"));
+            if (downloadFile(url, zipFile.getAbsolutePath())) {
 
-                // execute python msi installer
-                ArrayList<String> cmds = new ArrayList<String>();
-                cmds.add("msiexec");
-                cmds.add("/i");
-                cmds.add(outFile);
-                cmds.add("/norestart");
-                cmds.add("/qb!");
+                File targetDir = new File(combinePaths(dir.getAbsolutePath(), "python"));
+
+                // extract python
                 try {
-                    Runtime.getRuntime().exec(cmds.toArray(new String[cmds.size()]));
-                } catch (Exception ex) {
-                    WakaTime.error("An error occured while installing python: " + ex);
+                    Dependencies.unzip(zipFile.getAbsolutePath(), targetDir);
+                } catch (IOException e) {
+                    WakaTime.error(e.toString());
                 }
+                zipFile.delete();
             }
         }
     }
-    
+
     public static boolean downloadFile(String url, String saveAs) {
         File outFile = new File(saveAs);
 
@@ -241,6 +233,7 @@ public class Dependencies {
             rbc = Channels.newChannel(downloadUrl.openStream());
             fos = new FileOutputStream(saveAs);
             fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+            fos.close();
             return true;
         } catch (RuntimeException e) {
             WakaTime.error(e.toString());
@@ -258,6 +251,7 @@ public class Dependencies {
                     fos.write(buffer, 0, bytesRead);
                 }
                 inputStream.close();
+                fos.close();
                 return true;
             } catch (NoSuchAlgorithmException e1) {
                 WakaTime.error(e1.toString());
@@ -309,7 +303,7 @@ public class Dependencies {
             } catch (IOException e1) {
                 WakaTime.error(e1.toString());
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             WakaTime.error(e.toString());
         }
 
@@ -359,6 +353,16 @@ public class Dependencies {
             }
         }
         path.delete();
+    }
+
+    public static boolean is64bit() {
+        boolean is64bit = false;
+        if (System.getProperty("os.name").contains("Windows")) {
+            is64bit = (System.getenv("ProgramFiles(x86)") != null);
+        } else {
+            is64bit = (System.getProperty("os.arch").indexOf("64") != -1);
+        }
+        return is64bit;
     }
 
     private static String combinePaths(String... args) {
