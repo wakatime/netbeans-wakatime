@@ -3,6 +3,13 @@ History
 -------
 
 
+4.0.3 (2016-01-07)
+++++++++++++++++++
+
+- use embeddable python on Windows
+- remove jna modules
+
+
 4.0.2 (2015-10-12)
 ++++++++++++++++++
 

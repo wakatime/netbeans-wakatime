@@ -4,5 +4,5 @@ OpenIDE-Module: org.wakatime.netbeans.plugin
 OpenIDE-Module-Install: org/wakatime/netbeans/plugin/WakaTime.class
 OpenIDE-Module-Layer: org/wakatime/netbeans/plugin/layer.xml
 OpenIDE-Module-Localizing-Bundle: org/wakatime/netbeans/plugin/Bundle.properties
-OpenIDE-Module-Implementation-Version: 201510122313
-OpenIDE-Module-Specification-Version: 4.0.2
+OpenIDE-Module-Implementation-Version: 201601071522
+OpenIDE-Module-Specification-Version: 4.0.3
