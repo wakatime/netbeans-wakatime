@@ -168,14 +168,16 @@ public class Dependencies {
         String zipFile = combinePaths(cli.getParentFile().getParentFile().getParentFile().getAbsolutePath(), "wakatime-cli.zip");
         File outputDir = cli.getParentFile().getParentFile().getParentFile();
 
-        // Delete old wakatime-master directory if it exists
-        File dir = cli.getParentFile().getParentFile();
-        if (dir.exists()) {
-            deleteDirectory(dir);
-        }
-
-        // download wakatime-master.zip file
+        // Download wakatime-master.zip file
         if (downloadFile(url, zipFile)) {
+            
+            // Delete old wakatime-master directory if it exists
+            File dir = cli.getParentFile().getParentFile();
+            if (dir.exists()) {
+                deleteDirectory(dir);
+            }
+            
+            // Unzip wakatime-cli
             try {
                 Dependencies.unzip(zipFile, outputDir);
                 File oldZipFile = new File(zipFile);

@@ -64,19 +64,23 @@ public class WakaTime extends ModuleInstall implements Runnable {
             WakaTime.debug("Logging level set to DEBUG");
         }
 
-        if (!Dependencies.isCLIInstalled()) {
-            WakaTime.info("Downloading and installing wakatime-cli ...");
-            Dependencies.installCLI();
-            WakaTime.READY = true;
-            WakaTime.info("Finished downloading and installing wakatime-cli.");
-        } else if (Dependencies.isCLIOld()) {
-            WakaTime.info("Upgrading wakatime-cli ...");
-            Dependencies.upgradeCLI();
-            WakaTime.READY = true;
-            WakaTime.info("Finished upgrading wakatime-cli.");
-        } else {
-            WakaTime.READY = true;
-            WakaTime.info("wakatime-cli is up to date.");
+        try {
+            if (!Dependencies.isCLIInstalled()) {
+                WakaTime.info("Downloading and installing wakatime-cli ...");
+                Dependencies.installCLI();
+                WakaTime.READY = true;
+                WakaTime.info("Finished downloading and installing wakatime-cli.");
+            } else if (Dependencies.isCLIOld()) {
+                WakaTime.info("Upgrading wakatime-cli ...");
+                Dependencies.upgradeCLI();
+                WakaTime.READY = true;
+                WakaTime.info("Finished upgrading wakatime-cli.");
+            } else {
+                WakaTime.READY = true;
+                WakaTime.info("wakatime-cli is up to date.");
+            }
+        } catch (Exception e) {
+            WakaTime.error(e.toString());
         }
 
         if (!Dependencies.isPythonInstalled()) {
