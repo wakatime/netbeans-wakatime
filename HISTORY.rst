@@ -3,6 +3,12 @@ History
 -------
 
 
+4.0.4 (2016-02-07)
+++++++++++++++++++
+
+- prevent deleting wakatime-cli when IDE started offline
+
+
 4.0.3 (2016-01-07)
 ++++++++++++++++++
 
