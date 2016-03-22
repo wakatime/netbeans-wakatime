@@ -3,6 +3,12 @@ History
 -------
 
 
+4.0.5 (2016-03-22)
+++++++++++++++++++
+
+- allow changing debug mode from WakaTime settings inside NetBeans
+
+
 4.0.4 (2016-02-07)
 ++++++++++++++++++
 
