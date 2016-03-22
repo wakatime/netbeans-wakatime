@@ -30,6 +30,7 @@ import org.netbeans.api.project.Project;
 import org.netbeans.api.project.ProjectUtils;
 import org.openide.*;
 import org.openide.modules.ModuleInstall;
+import org.openide.util.NbPreferences;
 import org.openide.windows.OnShowing;
 import org.openide.windows.WindowManager;
 import static org.wakatime.netbeans.plugin.WakaTime.IDE_NAME;
@@ -105,13 +106,15 @@ public class WakaTime extends ModuleInstall implements Runnable {
         WakaTime.debug("CLI location: " + Dependencies.getCLILocation());
 
         // prompt for apiKey if it does not already exist
-        String apiKey = ApiKey.getApiKey();
+        String apiKey = getApiKey();
         if (apiKey.equals("")) {
-            apiKey = ApiKey.promptForApiKey();
-            if (apiKey != null && !apiKey.equals(""))
-                ApiKey.saveApiKey(apiKey);
+            apiKey = ApiKey.promptForApiKey(apiKey);
+            if (apiKey != null && !apiKey.equals("")) {
+                ConfigFile.set("settings", "api_key", apiKey);
+                NbPreferences.forModule(WakaTime.class).put("API Key", apiKey);
+            }
         }
-        WakaTime.debug("API Key: " + obfuscateKey(ApiKey.getApiKey()));
+        WakaTime.debug("API Key: " + obfuscateKey(getApiKey()));
 
         // Listen for changes to documents
         PropertyChangeListener l = new PropertyChangeListener() {
@@ -171,34 +174,21 @@ public class WakaTime extends ModuleInstall implements Runnable {
     }
 
     public static Boolean isDebugEnabled() {
-        Boolean debug = false;
-        File userHome = new File(System.getProperty("user.home"));
-        File configFile = new File(userHome, WakaTime.CONFIG);
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new FileReader(configFile.getAbsolutePath()));
-        } catch (FileNotFoundException e1) {}
-        if (br != null) {
-            try {
-                String line = br.readLine();
-                while (line != null) {
-                    String[] parts = line.split("=");
-                    if (parts.length == 2 && parts[0].trim().equals("debug") && parts[1].trim().toLowerCase().equals("true")) {
-                        debug = true;
-                    }
-                    line = br.readLine();
-                }
-            } catch (IOException e) {
-                WakaTime.error(e.toString());
-            } finally {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    WakaTime.error(e.toString());
-                }
-            }
+        String debug = NbPreferences.forModule(WakaTime.class).get("Debug", "");
+        if (debug.equals("")) {
+            debug = ConfigFile.get("settings", "debug");
+            NbPreferences.forModule(WakaTime.class).put("Debug", debug);
         }
-        return debug;
+        return debug.equals("true");
+    }
+
+    public static String getApiKey() {
+        String apiKey = NbPreferences.forModule(WakaTime.class).get("API Key", "");
+        if (apiKey.equals("")) {
+            apiKey = ConfigFile.get("settings", "api_key");
+            NbPreferences.forModule(WakaTime.class).put("API Key", apiKey);
+        }
+        return apiKey;
     }
 
     public static String getPluginVersion() {
@@ -261,7 +251,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
         cmds.add(Dependencies.getPythonLocation());
         cmds.add(Dependencies.getCLILocation());
         cmds.add("--key");
-        cmds.add(ApiKey.getApiKey());
+        cmds.add(getApiKey());
         cmds.add("--file");
         cmds.add(file);
         if (currentProject != null) {

@@ -5,6 +5,8 @@
  */
 package org.wakatime.netbeans.plugin;
 
+import org.openide.util.NbPreferences;
+
 final class WakaTimePanel extends javax.swing.JPanel {
 
     private final WakaTimeOptionsPanelController controller;
@@ -26,6 +28,8 @@ final class WakaTimePanel extends javax.swing.JPanel {
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         apiKeyField = new javax.swing.JTextField();
+        jLabel2 = new javax.swing.JLabel();
+        debugToggle = new javax.swing.JToggleButton();
 
         org.openide.awt.Mnemonics.setLocalizedText(jLabel1, org.openide.util.NbBundle.getMessage(WakaTimePanel.class, "WakaTimePanel.jLabel1.text")); // NOI18N
 
@@ -36,15 +40,29 @@ final class WakaTimePanel extends javax.swing.JPanel {
             }
         });
 
+        org.openide.awt.Mnemonics.setLocalizedText(jLabel2, org.openide.util.NbBundle.getMessage(WakaTimePanel.class, "WakaTimePanel.jLabel2.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(debugToggle, org.openide.util.NbBundle.getMessage(WakaTimePanel.class, "WakaTimePanel.debugToggle.text")); // NOI18N
+        debugToggle.setToolTipText(org.openide.util.NbBundle.getMessage(WakaTimePanel.class, "WakaTimePanel.debugToggle.toolTipText")); // NOI18N
+        debugToggle.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                debugToggleActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(136, 136, 136)
-                .addComponent(jLabel1)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel1))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(apiKeyField, javax.swing.GroupLayout.PREFERRED_SIZE, 358, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(apiKeyField, javax.swing.GroupLayout.PREFERRED_SIZE, 358, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(debugToggle))
                 .addContainerGap(73, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -54,7 +72,11 @@ final class WakaTimePanel extends javax.swing.JPanel {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(apiKeyField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(182, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel2)
+                    .addComponent(debugToggle))
+                .addContainerGap(141, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -79,6 +101,13 @@ final class WakaTimePanel extends javax.swing.JPanel {
         // TODO add your handling code here:
     }//GEN-LAST:event_apiKeyFieldActionPerformed
 
+    private void debugToggleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_debugToggleActionPerformed
+        String text = "OFF";
+        if (debugToggle.isSelected())
+            text = "ON";
+        debugToggle.setText(text);
+    }//GEN-LAST:event_debugToggleActionPerformed
+
     void load() {
         // TODO read settings and initialize GUI
         // Example:
@@ -88,7 +117,16 @@ final class WakaTimePanel extends javax.swing.JPanel {
         // or:
         // someTextField.setText(SomeSystemOption.getDefault().getSomeStringProperty());
         
-        apiKeyField.setText(ApiKey.getApiKey());
+        apiKeyField.setText(WakaTime.getApiKey());
+        
+        if (WakaTime.isDebugEnabled()) {
+            debugToggle.setSelected(true);
+            debugToggle.setText("ON");
+        } else {
+            debugToggle.setSelected(false);
+            debugToggle.setText("OFF");
+        }
+        
     }
 
     void store() {
@@ -100,7 +138,15 @@ final class WakaTimePanel extends javax.swing.JPanel {
         // or:
         // SomeSystemOption.getDefault().setSomeStringProperty(someTextField.getText());
 
-        ApiKey.saveApiKey(apiKeyField.getText());
+        String apiKey = apiKeyField.getText();
+        ConfigFile.set("settings", "api_key", apiKey);
+        NbPreferences.forModule(WakaTime.class).put("API Key", apiKey);
+        
+        String debug = "false";
+        if (debugToggle.isSelected())
+            debug = "true";
+        ConfigFile.set("settings", "debug", debug);
+        NbPreferences.forModule(WakaTime.class).put("Debug", debug);
     }
 
     boolean valid() {
@@ -110,7 +156,9 @@ final class WakaTimePanel extends javax.swing.JPanel {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField apiKeyField;
+    private javax.swing.JToggleButton debugToggle;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     // End of variables declaration//GEN-END:variables
 
