@@ -28,4 +28,15 @@ Installation Walkthrough: [http://youtu.be/yjCGYetGv9A](http://youtu.be/yjCGYetG
 Screen Shots
 ------------
 
-![Project Overview](https://wakatime.com/static/img/ScreenShots/ScreenShot-2014-10-29.png)
+![Project Overview](https://wakatime.com/static/img/ScreenShots/Screen-Shot-2016-03-21.png)
+
+
+Troubleshooting
+---------------
+
+Netbeans logs to it's own log file (`View` -> `IDE Log`).
+After the plugin passes control to [wakatime-cli][wakatime cli], logs go to the common `~/.wakatime.log` file.
+
+For more general troubleshooting information, see [wakatime cli][wakatime cli].
+
+[wakatime cli]: https://github.com/wakatime/wakatime#troubleshooting
