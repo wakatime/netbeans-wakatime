@@ -35,6 +35,7 @@ Troubleshooting
 ---------------
 
 Netbeans logs to it's own log file (`View` -> `IDE Log`).
+
 After the plugin passes control to [wakatime-cli][wakatime cli], logs go to the common `~/.wakatime.log` file.
 
 For more general troubleshooting information, see [wakatime cli][wakatime cli].
