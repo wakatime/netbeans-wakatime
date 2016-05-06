@@ -3,6 +3,12 @@ History
 -------
 
 
+4.0.6 (2016-05-06)
+++++++++++++++++++
+
+- Fix bug that crashed plugin before it could be initialized.
+
+
 4.0.5 (2016-03-22)
 ++++++++++++++++++
 
