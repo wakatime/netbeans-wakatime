@@ -177,7 +177,11 @@ public class WakaTime extends ModuleInstall implements Runnable {
         String debug = NbPreferences.forModule(WakaTime.class).get("Debug", "");
         if (debug.equals("")) {
             debug = ConfigFile.get("settings", "debug");
-            NbPreferences.forModule(WakaTime.class).put("Debug", debug);
+            try {
+                NbPreferences.forModule(WakaTime.class).put("Debug", debug);
+            } catch (Exception e) {
+                WakaTime.warn(e.toString());
+            }
         }
         return debug.equals("true");
     }
@@ -186,7 +190,11 @@ public class WakaTime extends ModuleInstall implements Runnable {
         String apiKey = NbPreferences.forModule(WakaTime.class).get("API Key", "");
         if (apiKey.equals("")) {
             apiKey = ConfigFile.get("settings", "api_key");
-            NbPreferences.forModule(WakaTime.class).put("API Key", apiKey);
+            try {
+               NbPreferences.forModule(WakaTime.class).put("API Key", apiKey);
+            } catch (Exception e) {
+                WakaTime.warn(e.toString());
+            }
         }
         return apiKey;
     }
