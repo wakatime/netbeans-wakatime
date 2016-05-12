@@ -192,6 +192,8 @@ public class WakaTime extends ModuleInstall implements Runnable {
                 WakaTime.warn(e.toString());
             }
         }
+        if (apiKey == null)
+            apiKey = "";
         return apiKey;
     }
 

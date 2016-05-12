@@ -3,6 +3,12 @@ History
 -------
 
 
+4.0.8 (2016-05-12)
+++++++++++++++++++
+
+- Fix bug causing NullPointerException when launching plugin for first time.
+
+
 4.0.7 (2016-05-12)
 ++++++++++++++++++
 
