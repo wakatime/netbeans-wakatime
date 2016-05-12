@@ -3,6 +3,14 @@ History
 -------
 
 
+4.0.7 (2016-05-12)
+++++++++++++++++++
+
+- Fix bug causing NullPointerException when launching plugin.
+- Use common resources folder location in AppData folder for Windows and user
+  home folder for Mac/Linux.
+
+
 4.0.6 (2016-05-06)
 ++++++++++++++++++
 
