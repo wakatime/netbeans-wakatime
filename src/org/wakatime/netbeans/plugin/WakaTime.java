@@ -11,10 +11,6 @@ package org.wakatime.netbeans.plugin;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -175,7 +171,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
 
     public static Boolean isDebugEnabled() {
         String debug = NbPreferences.forModule(WakaTime.class).get("Debug", "");
-        if (debug.equals("")) {
+        if (debug == null || debug.equals("")) {
             debug = ConfigFile.get("settings", "debug");
             try {
                 NbPreferences.forModule(WakaTime.class).put("Debug", debug);
@@ -183,12 +179,12 @@ public class WakaTime extends ModuleInstall implements Runnable {
                 WakaTime.warn(e.toString());
             }
         }
-        return debug.equals("true");
+        return debug != null && debug.equals("true");
     }
 
     public static String getApiKey() {
         String apiKey = NbPreferences.forModule(WakaTime.class).get("API Key", "");
-        if (apiKey.equals("")) {
+        if (apiKey == null || apiKey.equals("")) {
             apiKey = ConfigFile.get("settings", "api_key");
             try {
                NbPreferences.forModule(WakaTime.class).put("API Key", apiKey);
