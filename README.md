@@ -7,9 +7,7 @@ Metrics, insights, and time tracking automatically generated from your programmi
 Installation
 ------------
 
-Installation Walkthrough: [http://youtu.be/yjCGYetGv9A](http://youtu.be/yjCGYetGv9A)
-
-1. Download the plugin from http://plugins.netbeans.org/plugin/56647
+1. Download the `.nbm` plugin from [GitHub releases](https://github.com/wakatime/netbeans-wakatime/releases/latest).
 
 2. Inside your IDE, select `Tools` -> `Plugins` -> `Downloaded` -> `Add Plugins...`
 
