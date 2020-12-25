@@ -16,6 +16,14 @@
                     </run-dependency>
                 </dependency>
                 <dependency>
+                    <code-name-base>org.netbeans.api.progress.nb</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>1.57</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
                     <code-name-base>org.netbeans.core.ide</code-name-base>
                     <build-prerequisite/>
                     <compile-dependency/>
@@ -156,6 +164,14 @@
                     <compile-dependency/>
                     <run-dependency>
                         <specification-version>8.25.1</specification-version>
+                    </run-dependency>
+                </dependency>
+                <dependency>
+                    <code-name-base>org.openide.util.ui</code-name-base>
+                    <build-prerequisite/>
+                    <compile-dependency/>
+                    <run-dependency>
+                        <specification-version>9.18</specification-version>
                     </run-dependency>
                 </dependency>
                 <dependency>
