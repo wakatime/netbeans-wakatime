@@ -3,6 +3,13 @@ History
 -------
 
 
+4.0.9 (2020-12-25)
+++++++++++++++++++
+
+- Add missing libraries for newer Netbeans.
+  `#20 <https://github.com/wakatime/netbeans-wakatime/issues/20>`_
+
+
 4.0.8 (2016-05-12)
 ++++++++++++++++++
 
