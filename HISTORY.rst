@@ -3,6 +3,13 @@ History
 -------
 
 
+4.0.10 (2020-12-28)
+++++++++++++++++++
+
+- Downgrade progress and util dependencies for older Netbeans.
+  `#21 <https://github.com/wakatime/netbeans-wakatime/issues/21>`_
+
+
 4.0.9 (2020-12-25)
 ++++++++++++++++++
 
