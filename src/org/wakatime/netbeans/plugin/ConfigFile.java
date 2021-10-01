@@ -23,9 +23,7 @@ public class ConfigFile {
 
     public static String get(String section, String key) {
 		section = section.toLowerCase(); //set section to lower case
-        String val = null;
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(configFile.getAbsolutePath()));
+        try (BufferedReader br = new BufferedReader(new FileReader(configFile.getAbsolutePath()))){
             String currentSection = "";
             try {
                 String line = br.readLine();
@@ -37,9 +35,7 @@ public class ConfigFile {
                         if (section.equals(currentSection)) {
                             String[] parts = line.split("=");
                             if (parts.length == 2 && parts[0].trim().equals(key)) {
-                                val = parts[1].trim();
-                                br.close();
-                                return val;
+                                return parts[1].trim();
                             }
                         }
                     }
@@ -48,16 +44,9 @@ public class ConfigFile {
             } catch (Exception e) {
                 WakaTime.error(e.toString());
                 e.printStackTrace();
-            } finally {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    WakaTime.error(e.toString());
-                    e.printStackTrace();
-                }
-            }
-        } catch (FileNotFoundException e1) { /* ignored */ }
-        return val;
+            }  
+		} catch (Exception e1) { /* ignored */ }
+		return null;
     }
 
     public static void set(String section, String key, String val) {
