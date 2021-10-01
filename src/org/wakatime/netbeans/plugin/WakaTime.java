@@ -131,15 +131,12 @@ public class WakaTime extends ModuleInstall implements Runnable {
         WakaTime.info("Finished initializing WakaTime plugin.");
 
         // install update checker when UI is ready (main window shown)
-        WindowManager.getDefault().invokeWhenUIReady(new Runnable () {
-            @Override
-            public void run () {
+        WindowManager.getDefault().invokeWhenUIReady(()->{
                 try {
                     UpdateHandler.checkAndHandleUpdates();
                 } catch(NullPointerException e) {
                     WakaTime.error(e.toString());
                 }
-            }
         });
     }
 
@@ -215,8 +212,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
     private static void sendHeartbeat(final String file, final Project currentProject, final boolean isWrite, final int tries) {
         final String[] cmds = buildCliCommand(file, currentProject, isWrite);
         WakaTime.debug("Executing CLI: " + Arrays.toString(obfuscateKey(cmds)));
-        Runnable r = new Runnable() {
-            public void run() {
+        Runnable r = () -> {
                 try {
                     Process proc = Runtime.getRuntime().exec(cmds);
                     if (WakaTime.DEBUG) {
@@ -247,8 +243,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
                         WakaTime.error(e.toString());
                     }
                 }
-            }
-        };
+		};
         new Thread(r).start();
     }
 

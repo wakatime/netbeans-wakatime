@@ -147,12 +147,14 @@ public class Dependencies {
 
     public static void installCLI() {
         File cli = new File(Dependencies.getCLILocation());
-        if (!cli.getParentFile().getParentFile().getParentFile().exists())
-            cli.getParentFile().getParentFile().getParentFile().mkdirs();
+		File wakaTimeParentDir = new File(getResourcesLocation());
+
+        if (!wakaTimeParentDir.exists())
+            wakaTimeParentDir.mkdirs();
 
         String url = "https://codeload.github.com/wakatime/wakatime/zip/master";
-        String zipFile = combinePaths(cli.getParentFile().getParentFile().getParentFile().getAbsolutePath(), "wakatime-cli.zip");
-        File outputDir = cli.getParentFile().getParentFile().getParentFile();
+        String zipFile = combinePaths(wakaTimeParentDir.getAbsolutePath(), "wakatime-cli.zip");
+        File outputDir = wakaTimeParentDir;
 
         // Download wakatime-master.zip file
         if (downloadFile(url, zipFile)) {
