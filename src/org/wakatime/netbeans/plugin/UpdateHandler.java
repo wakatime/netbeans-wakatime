@@ -246,7 +246,7 @@ public final class UpdateHandler {
         try {
             final String displayName = "Checking for updates to WakaTime plugin...";
             silentUpdateProvider.refresh(
-                ProgressHandleFactory.createHandle(
+                ProgressHandle.createHandle(
                     displayName,
                     new Cancellable () {
                         @Override
@@ -271,7 +271,7 @@ public final class UpdateHandler {
                 try {
                     final String displayName = "Checking for updates to WakaTime plugin...";
                     p.refresh(
-                        ProgressHandleFactory.createHandle(
+                        ProgressHandle.createHandle(
                             displayName,
                             new Cancellable () {
                                 @Override
