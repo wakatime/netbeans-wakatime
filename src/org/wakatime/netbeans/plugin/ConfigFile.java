@@ -22,6 +22,7 @@ public class ConfigFile {
     private static File configFile = new File(userHomeDir, WakaTime.CONFIG);
 
     public static String get(String section, String key) {
+		section = section.toLowerCase(); //set section to lower case
         String val = null;
         try {
             BufferedReader br = new BufferedReader(new FileReader(configFile.getAbsolutePath()));
@@ -29,10 +30,11 @@ public class ConfigFile {
             try {
                 String line = br.readLine();
                 while (line != null) {
-                    if (line.trim().startsWith("[") && line.trim().endsWith("]")) {
-                        currentSection = line.trim().substring(1, line.trim().length() - 1).toLowerCase();
+					line = line.trim(); //trim here to save CPU cycles
+                    if (line.startsWith("[") && line.endsWith("]")) {
+                        currentSection = line.substring(1, line.length() - 1).toLowerCase();
                     } else {
-                        if (section.toLowerCase().equals(currentSection)) {
+                        if (section.equals(currentSection)) {
                             String[] parts = line.split("=");
                             if (parts.length == 2 && parts[0].trim().equals(key)) {
                                 val = parts[1].trim();

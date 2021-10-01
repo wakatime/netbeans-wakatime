@@ -171,7 +171,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
 
     public static Boolean isDebugEnabled() {
         String debug = NbPreferences.forModule(WakaTime.class).get("Debug", "");
-        if (debug == null || debug.equals("")) {
+        if (debug.equals("")) {
             debug = ConfigFile.get("settings", "debug");
             try {
                 NbPreferences.forModule(WakaTime.class).put("Debug", debug);
