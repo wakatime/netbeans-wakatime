@@ -179,7 +179,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
                 WakaTime.warn(e.toString());
             }
         }
-        return debug != null && debug.equals("true");
+        return debug.equals("true");
     }
 
     public static String getApiKey() {
