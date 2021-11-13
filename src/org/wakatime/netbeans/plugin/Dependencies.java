@@ -142,7 +142,7 @@ public class Dependencies {
     }
 
     public static String getCLILocation() {
-        return combinePaths(Dependencies.getResourcesLocation(), "wakatime-master", "wakatime", "cli.py");
+        return combinePaths(Dependencies.getResourcesLocation(), "legacy-python-cli-master", "wakatime", "cli.py");
     }
 
     public static void installCLI() {
@@ -156,13 +156,13 @@ public class Dependencies {
 
         // Download wakatime-master.zip file
         if (downloadFile(url, zipFile)) {
-            
+
             // Delete old wakatime-master directory if it exists
             File dir = cli.getParentFile().getParentFile();
             if (dir.exists()) {
                 deleteDirectory(dir);
             }
-            
+
             // Unzip wakatime-cli
             try {
                 Dependencies.unzip(zipFile, outputDir);
@@ -352,7 +352,7 @@ public class Dependencies {
         }
         return is64bit;
     }
-    
+
     public static boolean isWindows() {
         return System.getProperty("os.name").contains("Windows");
     }
