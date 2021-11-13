@@ -3,6 +3,13 @@ History
 -------
 
 
+4.0.11 (2021-11-13)
+++++++++++++++++++
+
+- Fix wakatime-cli location after GitHub repo renamed.
+  `#24 <https://github.com/wakatime/netbeans-wakatime/issues/24>`_
+
+
 4.0.10 (2020-12-28)
 ++++++++++++++++++
 
