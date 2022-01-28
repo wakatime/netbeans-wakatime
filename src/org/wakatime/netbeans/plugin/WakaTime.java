@@ -11,6 +11,7 @@ package org.wakatime.netbeans.plugin;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,44 +62,9 @@ public class WakaTime extends ModuleInstall implements Runnable {
             WakaTime.debug("Logging level set to DEBUG");
         }
 
-        try {
-            if (!Dependencies.isCLIInstalled()) {
-                WakaTime.info("Downloading and installing wakatime-cli ...");
-                Dependencies.installCLI();
-                WakaTime.READY = true;
-                WakaTime.info("Finished downloading and installing wakatime-cli.");
-            } else if (Dependencies.isCLIOld()) {
-                WakaTime.info("Upgrading wakatime-cli ...");
-                Dependencies.upgradeCLI();
-                WakaTime.READY = true;
-                WakaTime.info("Finished upgrading wakatime-cli.");
-            } else {
-                WakaTime.READY = true;
-                WakaTime.info("wakatime-cli is up to date.");
-            }
-        } catch (Exception e) {
-            WakaTime.error(e.toString());
-        }
+        Dependencies.configureProxy();
+        checkCLI();
 
-        if (!Dependencies.isPythonInstalled()) {
-            
-            WakaTime.info("Python not found, downloading python...");
-
-            // download and install python
-            Dependencies.installPython();
-
-            if (Dependencies.isPythonInstalled()) {
-                log.info("Finished installing python...");
-            } else {
-                WakaTime.error("WakaTime requires Python to be installed.");
-                String msg = "WakaTime requires Python to be installed and in your system PATH.\nYou can install Python from https://www.python.org/downloads/\nAfter installing Python, restart your IDE.";
-                WakaTime.errorDialog(msg);
-                return;
-            }
-            
-        }
-
-        WakaTime.debug("Python location: " + Dependencies.getPythonLocation());
         WakaTime.debug("CLI location: " + Dependencies.getCLILocation());
 
         // prompt for apiKey if it does not already exist
@@ -106,7 +72,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
         if (apiKey.equals("")) {
             apiKey = ApiKey.promptForApiKey(apiKey);
             if (apiKey != null && !apiKey.equals("")) {
-                ConfigFile.set("settings", "api_key", apiKey);
+                ConfigFile.set("settings", "api_key", false, apiKey);
                 NbPreferences.forModule(WakaTime.class).put("API Key", apiKey);
             }
         }
@@ -142,6 +108,32 @@ public class WakaTime extends ModuleInstall implements Runnable {
             }
         });
     }
+    
+    private void checkCLI() {
+        if (!Dependencies.isCLIInstalled()) {
+            WakaTime.info("Downloading and installing wakatime-cli...");
+            Dependencies.installCLI();
+            WakaTime.READY = true;
+            WakaTime.info("Finished downloading and installing wakatime-cli.");
+        } else if (Dependencies.isCLIOld()) {
+            if (System.getenv("WAKATIME_CLI_LOCATION") != null && !System.getenv("WAKATIME_CLI_LOCATION").trim().isEmpty()) {
+                File wakatimeCLI = new File(System.getenv("WAKATIME_CLI_LOCATION"));
+                if (wakatimeCLI.exists()) {
+                	WakaTime.error("$WAKATIME_CLI_LOCATION is out of date, please update it.");
+                }
+            } else {
+            	WakaTime.info("Upgrading wakatime-cli ...");
+                Dependencies.installCLI();
+                WakaTime.READY = true;
+                WakaTime.info("Finished upgrading wakatime-cli.");
+            }
+        } else {
+            WakaTime.READY = true;
+            WakaTime.info("wakatime-cli is up to date.");
+        }
+        Dependencies.createSymlink(Dependencies.combinePaths(Dependencies.getResourcesLocation(), "wakatime-cli"), Dependencies.getCLILocation());
+        WakaTime.debug("wakatime-cli location: " + Dependencies.getCLILocation());
+    }
 
     public static boolean enoughTimePassed(long currentTime) {
         return WakaTime.lastTime + FREQUENCY * 60 < currentTime;
@@ -172,7 +164,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
     public static Boolean isDebugEnabled() {
         String debug = NbPreferences.forModule(WakaTime.class).get("Debug", "");
         if (debug == null || debug.equals("")) {
-            debug = ConfigFile.get("settings", "debug");
+            debug = ConfigFile.get("settings", "debug", false);
             try {
                 NbPreferences.forModule(WakaTime.class).put("Debug", debug);
             } catch (Exception e) {
@@ -185,7 +177,7 @@ public class WakaTime extends ModuleInstall implements Runnable {
     public static String getApiKey() {
         String apiKey = NbPreferences.forModule(WakaTime.class).get("API Key", "");
         if (apiKey == null || apiKey.equals("")) {
-            apiKey = ConfigFile.get("settings", "api_key");
+            apiKey = ConfigFile.get("settings", "api_key", false);
             try {
                NbPreferences.forModule(WakaTime.class).put("API Key", apiKey);
             } catch (Exception e) {
@@ -254,11 +246,10 @@ public class WakaTime extends ModuleInstall implements Runnable {
 
     public static String[] buildCliCommand(String file, Project currentProject, boolean isWrite) {
         ArrayList<String> cmds = new ArrayList<String>();
-        cmds.add(Dependencies.getPythonLocation());
         cmds.add(Dependencies.getCLILocation());
         cmds.add("--key");
         cmds.add(getApiKey());
-        cmds.add("--file");
+        cmds.add("--entity");
         cmds.add(file);
         if (currentProject != null) {
             cmds.add("--project");

@@ -139,13 +139,13 @@ final class WakaTimePanel extends javax.swing.JPanel {
         // SomeSystemOption.getDefault().setSomeStringProperty(someTextField.getText());
 
         String apiKey = apiKeyField.getText();
-        ConfigFile.set("settings", "api_key", apiKey);
+        ConfigFile.set("settings", "api_key", false, apiKey);
         NbPreferences.forModule(WakaTime.class).put("API Key", apiKey);
         
         String debug = "false";
         if (debugToggle.isSelected())
             debug = "true";
-        ConfigFile.set("settings", "debug", debug);
+        ConfigFile.set("settings", "debug", false, debug);
         NbPreferences.forModule(WakaTime.class).put("Debug", debug);
     }
 

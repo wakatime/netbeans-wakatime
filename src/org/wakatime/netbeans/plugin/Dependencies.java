@@ -7,90 +7,79 @@ Website:     https://wakatime.com/
 ===========================================================*/
 
 package org.wakatime.netbeans.plugin;
-
-import java.io.*;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.Authenticator;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.UnknownHostException;
+import java.net.PasswordAuthentication;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
+
+
+class Response {
+    public int statusCode;
+    public String body;
+    public String lastModified;
+
+    public Response(int statusCode, String body, String lastModified) {
+        this.statusCode = statusCode;
+        this.body = body;
+        this.lastModified = lastModified;
+    }
+}
 
 public class Dependencies {
-
-    private static String pythonLocation = null;
-    private static String resourcesLocation = null;
-
-    public static boolean isPythonInstalled() {
-        return Dependencies.getPythonLocation() != null;
-    }
+	private static String resourcesLocation = null;
+    private static String cliVersion = null;
+    private static Boolean alpha = null;
 
     public static String getResourcesLocation() {
-        if (Dependencies.resourcesLocation == null) {
-            if (isWindows()) {
-                File appDataFolder = new File(System.getenv("APPDATA"));
-                File resourcesFolder = new File(appDataFolder, "WakaTime");
-                Dependencies.resourcesLocation = resourcesFolder.getAbsolutePath();
-            } else {
-                File userHomeDir = new File(System.getProperty("user.home"));
-                File resourcesFolder = new File(userHomeDir, ".wakatime");
-                Dependencies.resourcesLocation = resourcesFolder.getAbsolutePath();
-            }
-        }
-        return Dependencies.resourcesLocation;
-    }
+        if (Dependencies.resourcesLocation != null) return Dependencies.resourcesLocation;
 
-    public static String getPythonLocation() {
-        if (Dependencies.pythonLocation != null)
-            return Dependencies.pythonLocation;
-        ArrayList<String> paths = new ArrayList<String>();
-        paths.add(null);
-        paths.add("/");
-        paths.add("/usr/local/bin/");
-        paths.add("/usr/bin/");
-        if (System.getProperty("os.name").contains("Windows")) {
-            File resourcesLocation = new File(Dependencies.getResourcesLocation());
-            paths.add(combinePaths(resourcesLocation.getAbsolutePath(), "python"));
-            for (int i=26; i<=50; i++) {
-                paths.add(combinePaths("\\python" + i, "pythonw"));
-                paths.add(combinePaths("\\Python" + i, "pythonw"));
+        if (System.getenv("WAKATIME_HOME") != null && !System.getenv("WAKATIME_HOME").trim().isEmpty()) {
+            File resourcesFolder = new File(System.getenv("WAKATIME_HOME"));
+            if (resourcesFolder.exists()) {
+                Dependencies.resourcesLocation = resourcesFolder.getAbsolutePath();
+                WakaTime.debug("Using $WAKATIME_HOME for resources folder: " + Dependencies.resourcesLocation);
+                return Dependencies.resourcesLocation;
             }
         }
-        for (String path : paths) {
-            try {
-                String[] cmds = {combinePaths(path, "pythonw"), "--version"};
-                Runtime.getRuntime().exec(cmds);
-                Dependencies.pythonLocation = combinePaths(path, "pythonw");
-                break;
-            } catch (Exception e) {
-                try {
-                    String[] cmds = {combinePaths(path, "python"), "--version"};
-                    Runtime.getRuntime().exec(cmds);
-                    Dependencies.pythonLocation = combinePaths(path, "python");
-                    break;
-                } catch (Exception e2) { }
-            }
+
+        if (isWindows()) {
+            File windowsHome = new File(System.getenv("USERPROFILE"));
+            File resourcesFolder = new File(windowsHome, ".wakatime");
+            Dependencies.resourcesLocation = resourcesFolder.getAbsolutePath();
+            return Dependencies.resourcesLocation;
         }
-        if (Dependencies.pythonLocation != null) {
-            WakaTime.debug("Found python binary: " + Dependencies.pythonLocation);
-        } else {
-            WakaTime.warn("Could not find python binary.");
-        }
-        return Dependencies.pythonLocation;
+
+        File userHomeDir = new File(System.getProperty("user.home"));
+        File resourcesFolder = new File(userHomeDir, ".wakatime");
+        Dependencies.resourcesLocation = resourcesFolder.getAbsolutePath();
+        return Dependencies.resourcesLocation;
     }
 
     public static boolean isCLIInstalled() {
         File cli = new File(Dependencies.getCLILocation());
-        WakaTime.debug("WakaTime Core Location: " + cli.getAbsolutePath());
-        WakaTime.debug("WakaTime Core Exists: " + cli.exists());
         return cli.exists();
     }
 
@@ -99,7 +88,6 @@ public class Dependencies {
             return false;
         }
         ArrayList<String> cmds = new ArrayList<String>();
-        cmds.add(Dependencies.getPythonLocation());
         cmds.add(Dependencies.getCLILocation());
         cmds.add("--version");
         try {
@@ -117,89 +105,127 @@ public class Dependencies {
             while ((s = stdError.readLine()) != null) {
                 output += s;
             }
-            WakaTime.debug("wakatime cli version check output: \"" + output + "\"");
-            WakaTime.debug("wakatime cli version check exit code: " + p.exitValue());
+            WakaTime.debug("wakatime-cli local version output: \"" + output + "\"");
+            WakaTime.debug("wakatime-cli local version exit code: " + p.exitValue());
 
             if (p.exitValue() == 0) {
                 String cliVersion = latestCliVersion();
-                WakaTime.debug("Current cli version from GitHub: " + cliVersion);
-                if (output.contains(cliVersion))
-                    return false;
+                WakaTime.debug("Latest wakatime-cli version: " + cliVersion);
+                if (output.trim().equals(cliVersion)) return false;
             }
-        } catch (Exception e) { }
+        } catch (Exception e) {
+            WakaTime.warn(e.getMessage());
+        }
         return true;
     }
 
     public static String latestCliVersion() {
-        String url = "https://raw.githubusercontent.com/wakatime/wakatime/master/wakatime/__about__.py";
-        String aboutText = getUrlAsString(url);
-        Pattern p = Pattern.compile("__version_info__ = \\('([0-9]+)', '([0-9]+)', '([0-9]+)'\\)");
-        Matcher m = p.matcher(aboutText);
-        if (m.find()) {
-            return m.group(1) + "." + m.group(2) + "." + m.group(3);
+        if (cliVersion != null) return cliVersion;
+        String url = Dependencies.githubReleasesApiUrl();
+        try {
+            Response resp = getUrlAsString(url, ConfigFile.get("internal", "cli_version_last_modified", true));
+            if (resp == null) {
+                cliVersion = ConfigFile.get("internal", "cli_version", true).trim();
+                WakaTime.debug("Using cached wakatime-cli version from config: " + cliVersion);
+                return cliVersion;
+            }
+            Pattern p = Pattern.compile(".*\"tag_name\":\\s*\"([^\"]+)\",.*");
+            Matcher m = p.matcher(resp.body);
+            if (m.find()) {
+                cliVersion = m.group(1);
+                if (resp.lastModified != null) {
+                    ConfigFile.set("internal", "cli_version_last_modified", true, resp.lastModified);
+                    ConfigFile.set("internal", "cli_version", true, cliVersion);
+                }
+                return cliVersion;
+            }
+        } catch (Exception e) {
+            WakaTime.warn(e.getMessage());
         }
-        return "Unknown";
+        cliVersion = "Unknown";
+        return cliVersion;
     }
 
     public static String getCLILocation() {
-        return combinePaths(Dependencies.getResourcesLocation(), "legacy-python-cli-master", "wakatime", "cli.py");
+        if (System.getenv("WAKATIME_CLI_LOCATION") != null && !System.getenv("WAKATIME_CLI_LOCATION").trim().isEmpty()) {
+            File wakatimeCLI = new File(System.getenv("WAKATIME_CLI_LOCATION"));
+            if (wakatimeCLI.exists()) {
+                WakaTime.debug("Using $WAKATIME_CLI_LOCATION as CLI Executable: " + wakatimeCLI);
+                return System.getenv("WAKATIME_CLI_LOCATION");
+            }
+        }
+
+        String ext = isWindows() ? ".exe" : "";
+        return combinePaths(getResourcesLocation(), "wakatime-cli-" + osname() + "-" + architecture() + ext);
     }
 
     public static void installCLI() {
-        File cli = new File(Dependencies.getCLILocation());
-        if (!cli.getParentFile().getParentFile().getParentFile().exists())
-            cli.getParentFile().getParentFile().getParentFile().mkdirs();
+        File resourceDir = new File(getResourcesLocation());
+        if (!resourceDir.exists()) resourceDir.mkdirs();
 
-        String url = "https://codeload.github.com/wakatime/wakatime/zip/master";
-        String zipFile = combinePaths(cli.getParentFile().getParentFile().getParentFile().getAbsolutePath(), "wakatime-cli.zip");
-        File outputDir = cli.getParentFile().getParentFile().getParentFile();
+        checkMissingPlatformSupport();
 
-        // Download wakatime-master.zip file
+        String url = getCLIDownloadUrl();
+        String zipFile = combinePaths(getResourcesLocation(), "wakatime-cli.zip");
+
         if (downloadFile(url, zipFile)) {
 
-            // Delete old wakatime-master directory if it exists
-            File dir = cli.getParentFile().getParentFile();
-            if (dir.exists()) {
-                deleteDirectory(dir);
-            }
+            // Delete old wakatime-cli if it exists
+            File file = new File(getCLILocation());
+            recursiveDelete(file);
 
-            // Unzip wakatime-cli
+            File outputDir = new File(getResourcesLocation());
             try {
-                Dependencies.unzip(zipFile, outputDir);
+                unzip(zipFile, outputDir);
+                if (!isWindows()) {
+	              makeExecutable(getCLILocation());
+	            }
                 File oldZipFile = new File(zipFile);
                 oldZipFile.delete();
             } catch (IOException e) {
-                WakaTime.error(e.toString());
+                WakaTime.error(e.getMessage());
             }
         }
     }
 
-    public static void upgradeCLI() {
-        Dependencies.installCLI();
+    private static void checkMissingPlatformSupport() {
+        String osname = osname();
+        String arch = architecture();
+
+        String[] validCombinations = {
+            "darwin-amd64",
+            "darwin-arm64",
+            "freebsd-386",
+            "freebsd-amd64",
+            "freebsd-arm",
+            "linux-386",
+            "linux-amd64", "linux-arm",
+            "linux-arm64",
+            "netbsd-386",
+            "netbsd-amd64",
+            "netbsd-arm",
+            "openbsd-386",
+            "openbsd-amd64",
+            "openbsd-arm",
+            "openbsd-arm64",
+            "windows-386",
+            "windows-amd64",
+            "windows-arm64",
+         };
+        if (!Arrays.asList(validCombinations).contains(osname + "-" + arch)) reportMissingPlatformSupport(osname, arch);
     }
 
-    public static void installPython() {
-        if (System.getProperty("os.name").contains("Windows")) {
-            String pyVer = "3.5.0";
-            String arch = "win32";
-            if (is64bit()) arch = "amd64";
-            String url = "https://www.python.org/ftp/python/" + pyVer + "/python-" + pyVer + "-embed-" + arch + ".zip";
-
-            File dir = new File(Dependencies.getResourcesLocation());
-            File zipFile = new File(combinePaths(dir.getAbsolutePath(), "python.zip"));
-            if (downloadFile(url, zipFile.getAbsolutePath())) {
-
-                File targetDir = new File(combinePaths(dir.getAbsolutePath(), "python"));
-
-                // extract python
-                try {
-                    Dependencies.unzip(zipFile.getAbsolutePath(), targetDir);
-                } catch (IOException e) {
-                    WakaTime.error(e.toString());
-                }
-                zipFile.delete();
-            }
+    private static void reportMissingPlatformSupport(String osname, String architecture) {
+        String url = "https://api.wakatime.com/api/v1/cli-missing?osname=" + osname + "&architecture=" + architecture + "&plugin=" + WakaTime.IDE_NAME;
+        try {
+            getUrlAsString(url, null);
+        } catch (Exception e) {
+            WakaTime.warn(e.getMessage());
         }
+    }
+
+    private static String getCLIDownloadUrl() {
+        return "https://github.com/wakatime/wakatime-cli/releases/download/" + latestCliVersion() + "/wakatime-cli-" + osname() + "-" + architecture() + ".zip";
     }
 
     public static boolean downloadFile(String url, String saveAs) {
@@ -213,7 +239,11 @@ public class Dependencies {
         URL downloadUrl = null;
         try {
             downloadUrl = new URL(url);
-        } catch (MalformedURLException e) { }
+        } catch (MalformedURLException e) {
+            WakaTime.error(e.getMessage());
+        }
+
+        WakaTime.debug("DownloadFile(" + downloadUrl.toString() + ")");
 
         ReadableByteChannel rbc = null;
         FileOutputStream fos = null;
@@ -224,13 +254,14 @@ public class Dependencies {
             fos.close();
             return true;
         } catch (RuntimeException e) {
-            WakaTime.error(e.toString());
+            WakaTime.warn(e.getMessage());
             try {
                 // try downloading without verifying SSL cert (https://github.com/wakatime/jetbrains-wakatime/issues/46)
                 SSLContext SSL_CONTEXT = SSLContext.getInstance("SSL");
                 SSL_CONTEXT.init(null, new TrustManager[] { new LocalSSLTrustManager() }, null);
                 HttpsURLConnection.setDefaultSSLSocketFactory(SSL_CONTEXT.getSocketFactory());
                 HttpsURLConnection conn = (HttpsURLConnection)downloadUrl.openConnection();
+                conn.setRequestProperty("User-Agent", "github.com/wakatime/netbeans-wakatime");
                 InputStream inputStream = conn.getInputStream();
                 fos = new FileOutputStream(saveAs);
                 int bytesRead = -1;
@@ -242,60 +273,116 @@ public class Dependencies {
                 fos.close();
                 return true;
             } catch (NoSuchAlgorithmException e1) {
-                WakaTime.error(e1.toString());
+                WakaTime.warn(e1.getMessage());
             } catch (KeyManagementException e1) {
-                WakaTime.error(e1.toString());
+                WakaTime.warn(e1.getMessage());
             } catch (IOException e1) {
-                WakaTime.error(e1.toString());
+                WakaTime.warn(e1.getMessage());
             }
         } catch (IOException e) {
-            WakaTime.error(e.toString());
+            WakaTime.warn(e.getMessage());
         }
 
         return false;
     }
 
-    public static String getUrlAsString(String url) {
+    public static Response getUrlAsString(String url, String lastModified) {
         StringBuilder text = new StringBuilder();
 
         URL downloadUrl = null;
         try {
             downloadUrl = new URL(url);
-        } catch (MalformedURLException e) { }
+        } catch (MalformedURLException e) {
+            WakaTime.error(e.getMessage());
+        }
 
+        WakaTime.debug("getUrlAsString(" + downloadUrl.toString() + ")");
+
+        String responseLastModified = null;
+        int statusCode = -1;
         try {
+            HttpsURLConnection conn = (HttpsURLConnection) downloadUrl.openConnection();
+            conn.setRequestProperty("User-Agent", "github.com/wakatime/netbeans-wakatime");
+            if (lastModified != null && !lastModified.trim().equals("")) {
+                conn.setRequestProperty("If-Modified-Since", lastModified.trim());
+            }
+            statusCode = conn.getResponseCode();
+            if (statusCode == 304) return null;
             InputStream inputStream = downloadUrl.openStream();
             byte[] buffer = new byte[4096];
             while (inputStream.read(buffer) != -1) {
                 text.append(new String(buffer, "UTF-8"));
             }
             inputStream.close();
+            if (conn.getResponseCode() == 200) responseLastModified = conn.getHeaderField("Last-Modified");
         } catch (RuntimeException e) {
-            WakaTime.error(e.toString());
+            WakaTime.warn(e.getMessage());
             try {
                 // try downloading without verifying SSL cert (https://github.com/wakatime/jetbrains-wakatime/issues/46)
                 SSLContext SSL_CONTEXT = SSLContext.getInstance("SSL");
-                SSL_CONTEXT.init(null, new TrustManager[] { new LocalSSLTrustManager() }, null);
+                SSL_CONTEXT.init(null, new TrustManager[]{new LocalSSLTrustManager()}, null);
                 HttpsURLConnection.setDefaultSSLSocketFactory(SSL_CONTEXT.getSocketFactory());
-                HttpsURLConnection conn = (HttpsURLConnection)downloadUrl.openConnection();
+                HttpsURLConnection conn = (HttpsURLConnection) downloadUrl.openConnection();
+                conn.setRequestProperty("User-Agent", "github.com/wakatime/netbeans-wakatime");
+                if (lastModified != null && !lastModified.trim().equals("")) {
+                    conn.setRequestProperty("If-Modified-Since", lastModified.trim());
+                }
+                statusCode = conn.getResponseCode();
+                if (statusCode == 304) return null;
                 InputStream inputStream = conn.getInputStream();
                 byte[] buffer = new byte[4096];
                 while (inputStream.read(buffer) != -1) {
                     text.append(new String(buffer, "UTF-8"));
                 }
                 inputStream.close();
+                if (conn.getResponseCode() == 200) responseLastModified = conn.getHeaderField("Last-Modified");
             } catch (NoSuchAlgorithmException e1) {
-                WakaTime.error(e1.toString());
+                WakaTime.warn(e1.getMessage());
             } catch (KeyManagementException e1) {
-                WakaTime.error(e1.toString());
+                WakaTime.warn(e1.getMessage());
+            } catch (UnknownHostException e1) {
+                WakaTime.warn(e1.getMessage());
             } catch (IOException e1) {
-                WakaTime.error(e1.toString());
+                WakaTime.warn(e1.getMessage());
             }
+        } catch (UnknownHostException e) {
+            WakaTime.warn(e.getMessage());
         } catch (Exception e) {
-            WakaTime.error(e.toString());
+            WakaTime.warn(e.getMessage());
         }
 
-        return text.toString();
+        return new Response(statusCode, text.toString(), responseLastModified);
+    }
+
+    /**
+     * Configures a proxy if one is set in ~/.wakatime.cfg.
+     */
+    public static void configureProxy() {
+        String proxyConfig = ConfigFile.get("settings", "proxy", false);
+        if (proxyConfig != null && !proxyConfig.trim().equals("")) {
+            try {
+                URL proxyUrl = new URL(proxyConfig);
+                String userInfo = proxyUrl.getUserInfo();
+                if (userInfo != null) {
+                    final String user = userInfo.split(":")[0];
+                    final String pass = userInfo.split(":")[1];
+                    Authenticator authenticator = new Authenticator() {
+                        public PasswordAuthentication getPasswordAuthentication() {
+                            return (new PasswordAuthentication(user, pass.toCharArray()));
+                        }
+                    };
+                    Authenticator.setDefault(authenticator);
+                }
+
+                if (!proxyUrl.getHost().trim().isEmpty()) {
+                    System.setProperty("https.proxyHost", proxyUrl.getHost());
+                    System.setProperty("https.proxyPort", Integer.toString(proxyUrl.getPort()));
+                }
+
+            } catch (MalformedURLException e) {
+                WakaTime.error("Proxy string must follow https://user:pass@host:port format: " + proxyConfig);
+            }
+        }
     }
 
     private static void unzip(String zipFile, File outputDir) throws IOException {
@@ -328,36 +415,55 @@ public class Dependencies {
         zis.close();
     }
 
-    private static void deleteDirectory(File path) {
-        if( path.exists() ) {
-            File[] files = path.listFiles();
-            for(int i=0; i<files.length; i++) {
-                if(files[i].isDirectory()) {
-                    deleteDirectory(files[i]);
-                }
-                else {
-                    files[i].delete();
+    private static void recursiveDelete(File path) {
+        if(path.exists()) {
+            if (isDirectory(path)) {
+                File[] files = path.listFiles();
+                for (int i = 0; i < files.length; i++) {
+                    if (isDirectory(files[i])) {
+                        recursiveDelete(files[i]);
+                    } else {
+                        files[i].delete();
+                    }
                 }
             }
+            path.delete();
         }
-        path.delete();
+    }
+
+    public static boolean isAlpha() {
+        if (alpha != null) return alpha;
+        String setting = ConfigFile.get("settings", "alpha", false);
+        alpha = setting != null && setting.equals("true");
+        return alpha;
     }
 
     public static boolean is64bit() {
-        boolean is64bit = false;
-        if (isWindows()) {
-            is64bit = (System.getenv("ProgramFiles(x86)") != null);
-        } else {
-            is64bit = (System.getProperty("os.arch").indexOf("64") != -1);
-        }
-        return is64bit;
+        return System.getProperty("os.arch").indexOf("64") != -1;
     }
 
     public static boolean isWindows() {
         return System.getProperty("os.name").contains("Windows");
     }
 
-    private static String combinePaths(String... args) {
+    public static String osname() {
+        if (isWindows()) return "windows";
+        String os = System.getProperty("os.name").toLowerCase();
+        if (os.contains("mac") || os.contains("darwin")) return "darwin";
+        if (os.contains("linux")) return "linux";
+        return os;
+    }
+
+    public static String architecture() {
+        String arch = System.getProperty("os.arch");
+        if (arch.contains("386") || arch.contains("32")) return "386";
+        if (arch.equals("aarch64")) return "arm64";
+        if (osname().equals("darwin") && arch.contains("arm")) return "arm64";
+        if (arch.contains("64")) return "amd64";
+        return arch;
+    }
+
+    public static String combinePaths(String... args) {
         File path = null;
         for (String arg : args) {
             if (arg != null) {
@@ -370,5 +476,59 @@ public class Dependencies {
         if (path == null)
             return null;
         return path.toString();
+    }
+
+    private static String githubReleasesApiUrl() {
+        if (isAlpha()) {
+            return "https://api.github.com/repos/wakatime/wakatime-cli/releases?per_page=1";
+        }
+        return "https://api.github.com/repos/wakatime/wakatime-cli/releases/latest";
+    }
+
+    private static void makeExecutable(String filePath) throws IOException {
+        File file = new File(filePath);
+        file.setExecutable(true);
+    }
+
+    private static boolean isSymLink(File filepath) {
+        try {
+            return Files.isSymbolicLink(filepath.toPath());
+        } catch(SecurityException e) {
+            return false;
+        }
+    }
+
+    private static boolean isDirectory(File filepath) {
+        try {
+            return filepath.isDirectory();
+        } catch(SecurityException e) {
+            return false;
+        }
+    }
+
+    public static void createSymlink(String source, String destination) {
+        File sourceLink = new File(source);
+        if (isDirectory(sourceLink)) recursiveDelete(sourceLink);
+        if (!isWindows()) {
+            if (!isSymLink(sourceLink)) {
+                recursiveDelete(sourceLink);
+                try {
+                    Files.createSymbolicLink(sourceLink.toPath(), new File(destination).toPath());
+                } catch (Exception e) {
+                    WakaTime.warn(e.getMessage());
+                    try {
+                        Files.copy(new File(destination).toPath(), sourceLink.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    } catch (Exception ex) {
+                        WakaTime.warn(ex.getMessage());
+                    }
+                }
+            }
+        } else {
+            try {
+                Files.copy(new File(destination).toPath(), sourceLink.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (Exception e) {
+                WakaTime.warn(e.getMessage());
+            }
+        }
     }
 }
