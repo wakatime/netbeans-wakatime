@@ -12,7 +12,7 @@ import java.util.UUID;
 import org.openide.*;
 
 public final class ApiKey {
-    
+
     public static String promptForApiKey(String defaultKey) {
         NotifyDescriptor.InputLine question = new NotifyDescriptor.InputLine(
             "API Key:",
@@ -21,20 +21,20 @@ public final class ApiKey {
             NotifyDescriptor.QUESTION_MESSAGE
         );
         question.setInputText(defaultKey);
- 
+
         if (DialogDisplayer.getDefault().notify(question) == NotifyDescriptor.OK_OPTION) {
             String apiKey = question.getInputText();
             if (ApiKey.isValidApiKey(apiKey)) {
                 return apiKey;
             }
         }
-        
+
         return null;
     }
-    
+
     public static boolean isValidApiKey(String apiKey) {
         try {
-            UUID.fromString(apiKey);
+            UUID.fromString(apiKey.replaceFirst("^waka_", ""));
         } catch (Exception e) {
             return false;
         }
